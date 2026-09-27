@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FraudSight — Financial Crime Investigation Platform</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --line:#e3e8f2; --txt:#0f1e3d; --body:#3d4b66; --mut:#7b87a1;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-bg:#eff4ff;
+  --red:#dc2626; --red-bg:#fdecec; --orange:#ea7c28; --orange-bg:#fdf3e7;
+  --green:#16a34a; --green-bg:#e9f7ee; --purple:#7c3aed; --purple-bg:#f1eafe;
+  --gray-bg:#eef1f6;
+  --r:10px; --sh:0 1px 2px rgba(16,30,61,.06);
+  --sans:Inter,Geist,'SF Pro Text',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --mono:ui-monospace,'Cascadia Mono',Consolas,monospace;
+}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px}
+a{color:var(--blue);text-decoration:none}
+/* shell */
+.shell{display:flex;min-height:100vh}
+aside.side{width:232px;flex:0 0 232px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:9px;align-items:center;padding:18px 18px 14px;font-weight:800;font-size:17px}
+.brand .mk{width:28px;height:28px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
+nav.menu{padding:4px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
+nav.menu a{display:flex;gap:11px;align-items:center;padding:9px 12px;border-radius:8px;color:var(--body);font-size:13.5px;font-weight:500}
+nav.menu a svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;flex:0 0 17px}
+nav.menu a:hover{background:var(--gray-bg)}
+nav.menu a.on{background:var(--blue-bg);color:var(--blue);font-weight:700}
+.sys{margin:12px;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:12px}
+.sys .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
+.sys small{color:var(--mut)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center;padding:12px 26px;backdrop-filter:blur(6px)}
+.search{flex:1;max-width:560px;position:relative}
+.search input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px 9px 34px;font-size:13.5px;font-family:var(--sans)}
+.search .ic{position:absolute;left:11px;top:10px;color:var(--mut)}
+.sdrop{position:absolute;top:40px;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(16,30,61,.12);display:none;max-height:320px;overflow:auto;z-index:40}
+.sdrop .r{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.sdrop .r:hover{background:var(--blue-bg)}
+.topright{margin-left:auto;display:flex;gap:14px;align-items:center}
+.bell{position:relative;cursor:pointer;color:var(--body)}
+.bell .n{position:absolute;top:-6px;right:-8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:0 5px}
+.user{display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.ndrop{position:absolute;top:56px;right:20px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(16,30,61,.12);width:320px;display:none;z-index:40;max-height:380px;overflow:auto}
+.ndrop .r{padding:9px 13px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.ndrop .r:hover{background:var(--blue-bg)}
+.page{padding:26px 28px 60px;max-width:1240px}
+h1.p{font-size:26px;margin:0}
+.sub{color:var(--body);margin:4px 0 0;font-size:14px}
+.phead{display:flex;align-items:flex-end;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.phead .sp{flex:1}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px;margin-bottom:16px}
+.card h3{margin:0 0 4px;font-size:15px}
+.card .hint{color:var(--mut);font-size:12.5px;margin:0 0 10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+.kpi{display:flex;gap:13px;align-items:flex-start}
+.kpi .ic{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 42px;font-size:18px}
+.kpi .v{font-size:26px;font-weight:800;line-height:1.1}
+.kpi .t{font-size:13px;color:var(--body);font-weight:600}
+.kpi .d{font-size:12px;margin-top:3px}
+.up{color:var(--red)}.down{color:var(--green)}.flat{color:var(--mut)}
+/* badges */
+.bdg{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-Critical,.b-High{background:var(--red-bg);color:var(--red)}
+.b-Medium{background:var(--orange-bg);color:#b45309}
+.b-Low{background:var(--green-bg);color:var(--green)}
+.b-Info{background:var(--gray-bg);color:var(--body)}
+.b-New,.b-Open{background:var(--blue-bg);color:var(--blue)}
+.b-UnderReview,.b-InProgress{background:var(--orange-bg);color:#b45309}
+.b-Escalated{background:var(--purple-bg);color:var(--purple)}
+.b-Cleared,.b-Resolved{background:var(--green-bg);color:var(--green)}
+.b-FP{background:var(--gray-bg);color:#5b6478}
+.det{font-size:11px;font-family:var(--mono);background:var(--gray-bg);border:1px solid var(--line);border-radius:12px;padding:1px 8px;margin:1px 3px 1px 0;display:inline-block;color:var(--body)}
+.det.conf-medium{opacity:.7;border-style:dashed}.det.conf-low{opacity:.5;border-style:dotted}
+/* tables */
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.t td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t tr:last-child td{border-bottom:none}
+table.t tbody tr.rowlink{cursor:pointer}
+table.t tbody tr.rowlink:hover{background:#f8faff}
+.mono{font-family:var(--mono);font-size:12.5px}
+/* buttons */
+.btn{display:inline-block;border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.btn:hover{background:#f6f8fc}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.pri:hover{background:var(--blue-d)}
+.btn.danger{color:var(--red);border-color:#f3c2c2}
+.btn:disabled{opacity:.55;cursor:wait}
+select,input[type=text],input[type=number],textarea{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px;font-family:var(--sans);color:var(--txt)}
+label.fl{font-size:12px;color:var(--body);font-weight:600;display:block;margin:10px 0 4px}
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;border-radius:0;padding:9px 14px;font-size:13.5px;color:var(--body);cursor:pointer;font-weight:600}
+.tabs button.on{color:var(--blue);border-bottom-color:var(--blue)}
+/* evidence graph */
+#egraph{height:460px;background:#fbfcff;border:1px solid var(--line);border-radius:8px;position:relative;overflow:hidden}
+.gtools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.gtools .btn{padding:5px 10px;font-size:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--body);margin:10px 0 0}
+.legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+.legend .bx{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:4px}
+.legend .ln{width:20px;height:0;display:inline-block;margin-right:4px;vertical-align:3px}
+.tl{font-size:13px;line-height:1.8}
+.tl .ts{font-family:var(--mono);color:var(--mut);font-size:12px}
+.narr{background:#f6f9ff;border:1px solid #d7e3fa;border-left:3px solid var(--blue);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.facts{margin:8px 0;padding-left:20px}
+.facts li{margin:5px 0}
+.tag{font-size:11.5px;background:var(--gray-bg);border:1px solid var(--line);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;display:inline-block;color:var(--body)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:5px 10px;font-size:13px}
+.kv dt{color:var(--mut)}.kv dd{margin:0;font-weight:600}
+.cols2{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+.chip{font-size:12.5px;border:1px solid var(--line);background:#fff;border-radius:14px;padding:5px 12px;margin:3px 5px 3px 0;cursor:pointer;display:inline-block;color:var(--body)}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.sent{border-bottom:1px solid var(--line);padding:8px 2px;font-size:13.5px}
+.stage{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.stage:last-child{border-bottom:none}
+.st-ic{width:22px;height:22px;border-radius:50%;flex:0 0 22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.st-ok{background:var(--green-bg);color:var(--green)}.st-run{background:var(--blue-bg);color:var(--blue)}.st-wait{background:var(--gray-bg);color:var(--mut)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0f1e3d;color:#fff;border-radius:8px;padding:10px 18px;display:none;z-index:60;font-size:13.5px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #c6d4f5;border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{color:var(--mut);padding:18px;border:1px dashed var(--line);border-radius:8px;text-align:center;background:#fff}
+.pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px;color:var(--body)}
+.pager button{min-width:30px}
+.filters label.fl{margin-top:12px}
+.note{font-size:12.5px;color:var(--mut)}
+svg.chart text{font-family:var(--sans)}
+@media(max-width:1000px){.grid4{grid-template-columns:1fr 1fr}.grid2,.cols2{grid-template-columns:1fr}aside.side{display:none}}
+
+/* ---- polish pass: motion, depth, life ---- */
+.card{transition:transform .16s ease,box-shadow .16s ease}
+a.card:hover,div.acard:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(16,30,61,.10)}
+table.t tbody tr{transition:background .12s ease}
+.btn{transition:background .12s ease,transform .08s ease}
+.btn:active{transform:scale(.97)}
+.bdg{letter-spacing:.02em}
+.page{animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.skel{border-radius:8px;background:linear-gradient(90deg,#e8edf6 25%,#f4f6fb 50%,#e8edf6 75%);background-size:200% 100%;animation:shim 1.1s linear infinite;color:transparent!important;border:none!important;pointer-events:none}
+@keyframes shim{to{background-position:-200% 0}}
+.kpi .v{font-variant-numeric:tabular-nums}
+.spark{margin-top:6px}
+.replay-cap{background:#0f1e3d;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px;margin-top:10px;min-height:44px}
+.replay-cap b{color:#9fc0ff}
+.rt-step-on{outline:2px solid var(--blue)}
+.pulse{animation:pl 1.2s ease-out 2}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(37,99,235,.5)}100%{box-shadow:0 0 0 14px rgba(37,99,235,0)}}
+.stage-new{animation:fadein .3s ease}
+.jargon{border-bottom:1px dotted #2563eb;cursor:help}#gloss{position:fixed;z-index:60;max-width:300px;background:#0f1e3d;color:#fff;border-radius:8px;padding:9px 13px;font-size:13px;line-height:1.5;display:none;box-shadow:0 8px 26px rgba(0,0,0,.3)}.story{border:1px solid #f0d48a;background:#fffdf4;border-left:4px solid #eab308;border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.65;margin-bottom:12px}.hl-btn.on{background:#2563eb;color:#fff;border-color:#2563eb}@media print{aside.side,header.top,.noprint{display:none}.page{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+  <div class="brand"><span class="mk">◈</span> FraudSight</div>
+  <nav class="menu" id="menu"></nav>
+  <div class="sys"><span class="dot"></span><b>System Online</b><br><small id="sysUpd">Last updated: —</small></div>
+</aside>
+<div class="main">
+<header class="top">
+  <div class="search"><span class="ic">⌕</span><input id="gq" placeholder="Search by entity, account, transaction or alert..." autocomplete="off"><div class="sdrop" id="sdrop"></div></div>
+  <div class="topright">
+    <span class="bell" id="bell">🔔<span class="n" id="bellN">0</span></span>
+    <span class="user"><span class="avatar" id="avInit">JD</span><select id="actorSel" title="Demo role switch"></select> ▾</span>
+  </div>
+  <div class="ndrop" id="ndrop"></div>
+</header>
+<div class="page" id="view"></div>
+</div>
+</div>
+<div id="toast"></div>
+<script>/*__VIS_LIB_INLINE__*/</script>
+<script>
+"use strict";
+/* ================= core ================= */
+const $=s=>document.querySelector(s);
+function actor(){return localStorage.getItem('fs_actor')||'investigator';}async function api(u,o){o=o||{};o.headers=Object.assign({"X-Actor":actor()},o.headers||{});let r;try{r=await fetch(u,o);}catch(e){toast('Network error — is the backend running?');throw e;}
+  if(!r.ok){toast('Request failed ('+r.status+')');throw new Error(r.status);}return r.json();}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',4200);}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inr=n=>'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
+const inrCr=n=>n>=1e7?'₹'+(n/1e7).toFixed(1)+' Cr':n>=1e5?'₹'+(n/1e5).toFixed(1)+' L':inr(n);
+const inrL=n=>n>=100000?'₹'+(n/100000).toFixed(1)+'L':inr(n);
+const RISK_RANK={Critical:4,High:3,Medium:2,Low:1};
+const STATUSMAP={'New':'Open','Under Review':'In Progress','Escalated':'Open','Cleared':'Resolved'};
+const DLABEL={circular:'Circular Transfer',structuring:'Structuring',access_anomaly:'Access Anomaly',hub_shift:'Hub Shift'};
+const state={alerts:[],entities:null,metrics:null,details:{},route:'home',param:null,
+  invTab:'All',invQ:'',invF:{type:'',status:'',risk:''},expFilters:{types:{employee:1,account:1,transaction:1},q:''}};
+function bdgRisk(r){return '<span class="bdg b-'+r+'">'+r+'</span>';}
+function bdgStatus(s){const m=STATUSMAP[s]||s;const cls=s==='New'?'New':s==='Under Review'?'UnderReview':s==='Escalated'?'Escalated':'Cleared';
+  return '<span class="bdg b-'+cls+'">'+m+'</span>';}
+function detPills(a){const c=a.det_conf||{};return (a.detectors||[]).map(d=>{const k=c[d]||'high';const t=DLABEL[d]||d;
+  return '<span class="det">'+(k==='high'?'':' conf-'+k)+' title="'+esc(t)+' - confidence: '+k+'>'+gterm(d,t)+'</span>';}).join('');}
+function alertTime(a){const tl=(a.evidence&&a.evidence.timeline)||[];return tl.length?tl[0].ts.slice(0,16).replace('T',', '):'—';}
+function alertAmount(a){return Math.max(0,...(a.hits||[]).map(h=>h.total_amount||0));}
+function primaryEntity(a){const h=(a.hits||[])[0]||{};
+  if(h.type==='access_anomaly')return h.emp+' → '+h.account;
+  if(h.type==='structuring')return h.src+' → '+h.dst;
+  if(h.type==='hub_shift')return h.account+' → '+h.fanout+' accts';
+  if(h.type==='circular'&&h.cycle)return h.cycle[0]+' → '+h.cycle[1];
+  return (a.tx_ids||[]).length+' tx';}
+function fmtDate(ts){try{const d=new Date(ts);return d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){return ts;}}
+function detDate(a){const d=state.details[a.id];const tl=d&&d.evidence&&d.evidence.timeline;return tl&&tl.length?tl[0].ts:'';}
+/* ---- data loading ---- */
+async function ensureBase(){
+  if(!state.metrics)state.metrics=await api('/api/metrics');
+  if(!state.alerts.length)state.alerts=await api('/api/alerts');
+  if(!state.entities)state.entities=await api('/api/entities');
+  if(!state.emps)state.emps=await api('/api/employees');
+}
+async function detail(id){
+  if(!state.details[id])state.details[id]=await api('/api/alerts/'+id);
+  return state.details[id];
+}
+async function allDetails(){
+  await ensureBase();
+  await Promise.all(state.alerts.map(a=>detail(a.id)));
+  return state.alerts.map(a=>state.details[a.id]);
+}
+/* ---- svg charts (no libraries, offline-safe) ---- */
+function lineChart(series,labels,W,H){
+W=W||560;H=H||210;const P={l:32,r:10,t:12,b:26},iw=W-P.l-P.r,ih=H-P.t-P.b;
+const max=Math.max(1,...series.flatMap(s=>s.values));
+const X=i=>P.l+iw*(labels.length<=1?0.5:i/(labels.length-1));
+const Y=v=>P.t+ih*(1-v/max);
+let g='';
+for(let k=0;k<=4;k++){const y=P.t+ih*k/4,v=Math.round(max*(1-k/4));
+g+='<line x1='+P.l+' y1='+y+' x2='+(W-P.r)+' y2='+y+' stroke=#edf1f8/>';}
+let paths='';
+series.forEach((s,si)=>{const pts=s.values.map((v,i)=>[X(i),Y(v)]);
+const dl=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+const gid='ag'+si;
+paths+='<defs><linearGradient id='+gid+' x1=0 y1=0 x2=0 y2=1><stop offset=0 stop-color='+s.color+' stop-opacity=.25/><stop offset=1 stop-color='+s.color+' stop-opacity=0/></linearGradient></defs>';
+if(si===0)paths+='<path d='+dl+'L'+X(s.values.length-1).toFixed(1)+' '+(P.t+ih)+'L'+X(0).toFixed(1)+' '+(P.t+ih)+'Z fill=url(#'+gid+')/>';
+paths+='<path d='+dl+' fill=none stroke='+s.color+' stroke-width=2.5 stroke-linecap=round/>';
+pts.forEach((pt,i)=>{paths+='<circle cx='+pt[0].toFixed(1)+' cy='+pt[1].toFixed(1)+' r=3.4 fill=#fff stroke='+s.color+' stroke-width=2><title>'+s.name+': '+labels[i]+' - '+s.values[i]+'</title></circle>';});});
+const xl=labels.map((l,i)=>'<text x='+X(i).toFixed(1)+' y='+(H-8)+' font-size=10 fill=#7b87a1 text-anchor=middle>'+esc(l)+'</text>').join('');
+const leg=series.map(s=>'<span style=margin-right:12px;font-size:12px;color:#3d4b66><span style=display:inline-block;width:8px;height:8px;border-radius:50%;background:'+s.color+';margin-right:4px></span>'+esc(s.name)+'</span>').join('');
+return '<div style=margin-bottom:6px>'+leg+'</div><svg width=100% viewBox=0 0 '+W+' '+H+'>'+g+paths+xl+'</svg>';
+}
+function spark(vals,color){
+const W=110,H=30,max=Math.max(1,...vals);
+const p=vals.map((v,i)=>(i?'L':'M')+(i/(Math.max(1,vals.length-1))*W).toFixed(1)+' '+(H-3-(v/max)*(H-8)).toFixed(1)).join(' ');
+return '<svg width='+W+' height='+H+'><path d='+p+' fill=none stroke='+color+' stroke-width=2/></svg>';
+}function donut(segs,size){
+  size=size||170;const R=60,C=2*Math.PI*R;let off=0,arcs='';
+  segs.forEach(s=>{const len=C*s.frac;
+    arcs+='<circle cx="85" cy="85" r="'+R+'" fill="none" stroke="'+s.color+'" stroke-width="22" stroke-dasharray="'+len.toFixed(1)+' '+(C-len).toFixed(1)+'" stroke-dashoffset="'+(-off).toFixed(1)+'" transform="rotate(-90 85 85)"/>';
+    off+=len;});
+  const rows=segs.map(s=>'<div style="display:flex;gap:8px;align-items:center;font-size:13px;padding:3px 0"><span style="width:9px;height:9px;border-radius:50%;background:'+s.color+'"></span><span style="flex:1">'+esc(s.name)+'</span><b>'+Math.round(s.frac*100)+'%</b></div>').join('');
+  return '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div style="position:relative;width:'+size+'px"><svg width="'+size+'" height="'+size+'" viewBox="0 0 170 170">'+arcs+'</svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><b style="font-size:22px">'+segs.reduce((t,s)=>t+s.n,0)+'</b><small style="color:#7b87a1">Total Alerts</small></div></div><div style="flex:1;min-width:150px">'+rows+'</div></div>';
+}
+function hbars(rows){
+  const max=Math.max(1,...rows.map(r=>r.n));
+  return rows.map(r=>'<div style="display:grid;grid-template-columns:70px 1fr 30px;gap:8px;align-items:center;font-size:13px;padding:5px 0"><span>'+esc(r.name)+'</span><div style="background:#eef1f6;border-radius:5px;height:22px"><div style="width:'+(100*r.n/max).toFixed(0)+'%;background:'+r.color+';height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">'+r.n+'</div></div><span></span></div>').join('');
+}
+/* ---- evidence graph (light enterprise theme, vis vendored inline) ---- */
+function cycleLayoutPositions(cycle,txEdges,W,H){
+  const n=cycle.length,R=Math.min(W,H)*0.32,cx=0,cy=-10,pos={};
+  cycle.forEach((id,k)=>{const ang=-Math.PI/2+k*2*Math.PI/n;pos[id]={x:cx+R*Math.cos(ang),y:cy+R*Math.sin(ang)};});
+  (txEdges||[]).forEach(te=>{const A=pos[te.src],B=pos[te.dst];if(!A||!B)return;
+    const mx=(A.x+B.x)/2,my=(A.y+B.y)/2,d=Math.hypot(mx-cx,my-cy)||1;
+    pos[te.tx]={x:mx+(mx-cx)/d*46,y:my+(my-cy)/d*46};});
+  return pos;
+}
+function evGraph(el,ev,a,opts){
+  opts=opts||{};el.innerHTML='';
+  if(typeof vis==='undefined'){el.innerHTML='<div class="empty">Graph library failed to load.</div>';return null;}
+  const nodes=ev.nodes||[],edges=ev.edges||[],kindById={};
+  nodes.forEach(n=>kindById[n.id]=n.kind);
+  const chit=a.detectors.includes('circular')?(a.hits||[]).find(h=>h.type==='circular'):null;
+  const pos={};
+  if(chit&&chit.cycle){
+    const sOf={},dOf={};
+    edges.forEach(e=>{if(kindById[e.to]==='transaction')sOf[e.to]=e.from;if(kindById[e.from]==='transaction')dOf[e.from]=e.to;});
+    const txE=Object.keys(sOf).filter(t=>dOf[t]).map(t=>({tx:t,src:sOf[t],dst:dOf[t]}));
+    Object.assign(pos,cycleLayoutPositions(chit.cycle,txE,(el.getBoundingClientRect().width)||700,460));
+    nodes.filter(n=>!pos[n.id]).forEach((n,i,r)=>{pos[n.id]={x:(i-(r.length-1)/2)*120,y:170};});
+  }
+  const COL={employee:['#ede9fe','#7c3aed'],account:['#dbeafe','#2563eb'],transaction:['#d1fae5','#059669']};
+  const nodeData=nodes.map(n=>{const c=COL[n.kind]||['#eef1f6','#64748b'];
+    const o={id:n.id,label:n.label||n.id,title:(n.title||n.id)+'\n('+n.kind+')',
+      color:{background:c[0],border:c[1]},shape:n.kind==='transaction'?'box':'dot',
+      font:{color:'#0f1e3d',size:12}};
+    if(pos[n.id]){o.x=pos[n.id].x;o.y=pos[n.id].y;o.fixed={x:true,y:true};}return o;});
+  const pc={};
+  const edgeData=edges.map((e,i)=>{const k=e.from+'→'+e.to;pc[k]=(pc[k]||0)+1;const idx=pc[k]-1;
+    const o={id:i,from:e.from,to:e.to,label:e.label||'',title:e.title||'',
+      dashes:!!e.dashes,color:{color:e.color&&e.color!=='red'&&e.color!=='orange'?'#94a3b8':e.color||'#94a3b8'},
+      font:{color:'#5b6478',size:10},arrows:'to'};
+    if(idx>0)o.smooth={enabled:true,type:'curvedCW',roundness:0.25*idx};
+    return o;});
+  const net=new vis.Network(el,{nodes:new vis.DataSet(nodeData),edges:new vis.DataSet(edgeData)},
+    {layout:chit&&chit.cycle?undefined:{hierarchical:{enabled:true,direction:'UD',sortMethod:'directed',levelSeparation:120,nodeSpacing:140}},physics:chit&&chit.cycle?{enabled:false}:{stabilization:{iterations:150}},
+     interaction:{hover:true,tooltipDelay:60}});
+  if(opts.focus){net.on('stabilizationIterationsDone',()=>net.fit());if(chit&&chit.cycle)net.fit();}
+  else if(chit&&chit.cycle)net.fit();
+  else net.once('stabilizationIterationsDone',()=>net.fit());
+  net._nds=net.body.data.nodes;net._eds=net.body.data.edges;
+  net._ncol={};net._nds.forEach(n=>{const c=n.color||{};net._ncol[n.id]={bg:c.background||'#eef1f6',bd:c.border||'#64748b'};});
+  net._ecol={};net._eds.forEach(e=>{const c=e.color||{};net._ecol[e.id]=c.color||'#94a3b8';});
+  return net;
+}
+function legendHTML(){
+  return '<div class="legend"><span><i class="dot" style="background:#7c3aed"></i>Employee</span>'
+  +'<span><i class="dot" style="background:#2563eb"></i>Account</span>'
+  +'<span><i class="bx" style="background:#059669"></i>Transaction</span>'
+  +'<span><i class="ln" style="border-top:2px solid #dc2626"></i>Escalation</span>'
+  +'<span><i class="ln" style="border-top:2px dashed #ea7c28"></i>Access touch</span></div>';
+}
+/* ================= nav + router ================= */
+const NAV=[
+ {k:'home',t:'Home',ic:'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10'},
+ {k:'investigations',t:'Investigations',ic:'M11 4a7 7 0 105.2 12.3L21 21l-1.5-1.5M8 11a3 3 0 106 0 3 3 0 00-6 0z'},
+ {k:'alerts',t:'Alerts',ic:'M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 004 0'},
+ {k:'redteam',t:'Red Team Simulator',ic:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zM9.5 12l2 2 3.5-4'},
+ {k:'cases',t:'Cases',ic:'M4 7h16M4 7v12h16V7M9 7V5h6v2'},{k:'inbox',t:'My Notices',ic:'M4 6h16v12H4zM4 10h16'},
+ {k:'explorer',t:'Graph Explorer',ic:'M6 6a2 2 0 104 0 2 2 0 00-4 0zM16 16a2 2 0 104 0 2 2 0 00-4 0zM8 7l8 8M6 18l4-4M14 10l4-2'},
+ {k:'reports',t:'Reports',ic:'M6 2h9l5 5v15H6zM14 2v6h6M9 13h7M9 17h7'},
+ {k:'settings',t:'Settings',ic:'M4 8h4l2-3h4l2 3h4v12H4zM12 16a3 3 0 100-6 3 3 0 000 6z'}];
+function renderMenu(){
+  $('#menu').innerHTML=NAV.filter(n=>n.k!=='inbox'||actor()!=='investigator').map(n=>'<a href="#/'+n.k+'" class="'+(state.route===n.k||(state.route==='alertdetail'&&(n.k==='alerts'||n.k==='investigations'))||(state.route==='casedetail'&&n.k==='cases')?'on':'')+'"><svg viewBox="0 0 24 24"><path d="'+n.ic+'"/></svg>'+n.t+'</a>').join('');
+}
+function nav(){const h=(location.hash||'#/home').slice(2).split('/');state.route=h[0]||'home';state.param=decodeURIComponent(h[1]||'');
+  renderMenu();window.scrollTo(0,0);
+  ({home:vHome,investigations:vInv,alerts:vAlerts,alertdetail:vAlertDetail,redteam:vRed,cases:vCases,casedetail:vCaseDetail,explorer:vExplorer,reports:vReports,settings:vSettings,inbox:vInbox}[state.route]||vHome)();}
+window.addEventListener('hashchange',nav);
+const GLOSSARY={circular:'Money moving in a closed loop (A to B to C and back to A). The classic layering step of money laundering.'
+,structuring:'One payment split into smaller transfers, each just under the reporting threshold.'
+,access_anomaly:'Someone got access to an account shortly before a large transfer out of it.'
+,hub_shift:'A quiet account suddenly sending money to many different destinations.'
+,confidence:'How closely the finding matches the textbook pattern: high, medium, or low.'
+,risk:'Low to Critical, set openly by which detectors fired - never a hidden score.'
+,evidence:'The exact accounts, people and transfers behind an alert.'};
+function gterm(k,label){return '<span class="jargon" data-g="'+k+'">'+esc(label)+'</span>';}
+function bindGlossary(){if(window._gb)return;window._gb=1;
+const gb=document.createElement('div');gb.id='gloss';document.body.appendChild(gb);
+const show=t=>{const dd=GLOSSARY[t.dataset.g];if(!dd)return;gb.textContent=dd;const r=t.getBoundingClientRect();gb.style.display='block';gb.style.left=Math.min(innerWidth-320,Math.max(8,r.left))+'px';gb.style.top=(r.bottom+window.scrollY+6)+'px';};
+const hide=()=>{gb.style.display='none';};
+document.addEventListener('mouseover',e=>{const t=e.target.closest?e.target.closest('.jargon'):null;if(t)show(t);});
+document.addEventListener('mouseout',e=>{if(e.target.closest&&e.target.closest('.jargon'))hide();});
+document.addEventListener('click',e=>{const t=e.target.closest?e.target.closest('.jargon'):null;if(t){show(t);setTimeout(hide,3500);}});
+}
+bindGlossary();
+/* ---- weekly buckets from real timestamps ---- */
+function weekKey(ts){const d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10);}
+function weekLabel(k){const d=new Date(k+'T00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+async function trendData(){
+  const ds=await allDetails(),txs=state.entities.transactions;
+  const weeks={};
+  txs.forEach(t=>{const k=weekKey(t.ts);(weeks[k]=weeks[k]||{tx:0,fraud:0,alerts:0});weeks[k].tx++;if(t.ground_truth_fraud)weeks[k].fraud++;});
+  ds.forEach(a=>{const tl=a.evidence.timeline;if(!tl.length)return;const k=weekKey(tl[0].ts);(weeks[k]=weeks[k]||{tx:0,fraud:0,alerts:0});weeks[k].alerts++;});
+  const ks=Object.keys(weeks).sort().slice(-8);
+  return {labels:ks.map(weekLabel),alerts:ks.map(k=>weeks[k].alerts),fraud:ks.map(k=>weeks[k].fraud),tx:ks.map(k=>weeks[k].tx)};
+}
+/* ================= PAGE: Home ================= */
+async function vHome(){
+  const v=$('#view');v.innerHTML='<div class="empty"><div class="skel" style="height:120px;margin-bottom:14px"></div><div class="skel" style="height:220px"></div><div style="display:none">loading dashboard…</div>';
+  await ensureBase();const m=state.metrics;
+  const ds=await allDetails();
+  const open=state.alerts.filter(a=>a.status!=='Cleared').length;
+  const inv=state.alerts.filter(a=>a.status==='Under Review').length;
+  const fpTx=state.entities.transactions.filter(t=>!t.ground_truth_fraud);
+  const flagged=new Set();state.alerts.forEach(a=>(a.tx_ids||[]).forEach(t=>flagged.add(t)));
+  const fp=fpTx.filter(t=>flagged.has(t.id)).length;
+  const fraudAlerts=state.alerts.filter(a=>a.ground_truth).length;
+  const tr=await trendData(),n=tr.labels.length;
+  const dlt=(arr)=>n>=2&&arr[n-2]>0?Math.round(100*(arr[n-1]-arr[n-2])/arr[n-2]):null;
+  const dHtml=d=>{if(d==null)return '<div class="d flat">X vs prior week</div>';const c=d>0?'up':'down';const t=d>0?'↑':'↓';return '<div class="d '+c+'">'+t+' '+d+'%</div>';};
+  const hr=new Date().getHours(),greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  const txById={};state.entities.transactions.forEach(t=>txById[t.id]=t);
+const seenTx=new Set();let expo=0,fraudV=0;
+ds.forEach(a=>(a.tx_ids||[]).forEach(id=>{if(seenTx.has(id))return;seenTx.add(id);const t=txById[id];if(!t)return;expo+=t.amount;if(t.ground_truth_fraud)fraudV+=t.amount;}));
+let biggest=0;ds.forEach(a=>{biggest=Math.max(biggest,alertAmount(a));});
+let sim={total:0,count:0};try{sim=JSON.parse(localStorage.getItem('fs_intercepted')||'{"total":0,"count":0}');}catch(e){}
+const hero='<div class="card" style="background:linear-gradient(135deg,#0f1e3d,#1e40af);color:#fff;border:none"><div style="display:flex;gap:28px;align-items:center;flex-wrap:wrap"><div><div style="font-size:13px;opacity:.75">Flagged money under review</div><div style="font-size:42px;font-weight:800;line-height:1.1">'+inrCr(expo)+'</div><div style="font-size:13px;opacity:.85">across '+seenTx.size+' flagged transfers · largest single case '+inrCr(biggest)+' · confirmed fraud value '+inrCr(fraudV)+'</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:13px;opacity:.75">Intercepted in live simulations</div><div style="font-size:26px;font-weight:800">'+inrCr(sim.total)+'</div><div style="font-size:12px;opacity:.85">across '+sim.count+' staged attacks</div></div></div></div>';
+
+v.innerHTML='<div class="phead"><div><h1 class="p">'+greet+', John</h1><p class="sub">Here\'s what\'s happening with your fraud detection system.</p></div><div class="sp"></div><span class="btn">'+(tr.labels[0]||'')+' — '+(tr.labels[n-1]||'')+' ▾</span></div>'
+  +hero+'<div class="grid4">'
+  +kpi('🔔','Total Alerts',state.alerts.length,'#fdecec','#dc2626',dHtml(dlt(tr.alerts))+spark(tr.alerts,'#2563eb'))
+  +kpi('✓','Confirmed Fraud',fraudAlerts,'#e9f7ee','#16a34a',dHtml(dlt(tr.fraud))+spark(tr.fraud,'#dc2626'))
+  +kpi('🔍','Investigating',inv,'#eff4ff','#2563eb','<div class="d flat">'+open+' open total</div>')+spark(tr.alerts,'#2563eb')
+  +kpi('👤','False Positives',fp,'#f1eafe','#7c3aed',dHtml(dlt(tr.tx.map((t,i)=>t-tr.fraud[i])))+spark(tr.tx,'#7c3aed'))
+  +'</div>'
+  +'<div class="grid2"><div class="card"><h3>Alert Trend</h3><p class="hint">Weekly alerts and fraud transactions (live data)</p>'
+  +lineChart([{name:'Total Alerts',color:'#2563eb',values:tr.alerts},{name:'Fraud Tx',color:'#dc2626',values:tr.fraud},{name:'All Tx ÷ 20',color:'#eab308',values:tr.tx.map(t=>Math.round(t/20))}],tr.labels)
+  +'</div><div class="card"><h3>Alerts by Pattern</h3><p class="hint">Share of open alerts per detector</p>'+patternDonut()+'</div></div>'
+  +'<div class="grid2"><div class="card"><h3>Recent Alerts</h3><p class="hint">Latest detections — click a row to open</p>'+recentTable(ds)+'</div>'
+  +'<div class="card"><h3>Risk Distribution</h3><p class="hint">Open alerts by risk level</p>'+riskBars()+'<div style="margin-top:14px;background:var(--blue-bg);border-radius:8px;padding:12px;display:flex;gap:10px;align-items:center"><span style="font-size:20px">🛡</span><div><b>System Overview</b><div class="note">Monitoring '+m.n_tx+' events across '+(state.entities.employees.length+state.entities.accounts.length)+' entities. False positive rate '+(m.false_positive_rate*100).toFixed(1)+'%.</div></div></div></div></div>';
+  $('#sysUpd').textContent='Last updated: '+new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  updateBell();
+}
+function kpi(ic,t,val,bg,fg,delta){
+  return '<div class="card"><div class="kpi"><span class="ic" style="background:'+bg+';color:'+fg+'">'+ic+'</span><div><div class="t">'+t+'</div><div class="v">'+val+'</div>'+delta+'</div></div></div>';
+}
+function patternDonut(){
+  const c={};state.alerts.forEach(a=>a.detectors.forEach(d=>c[d]=(c[d]||0)+1));
+  const tot=Object.values(c).reduce((t,n)=>t+n,0)||1;
+  const col={access_anomaly:'#7c3aed',structuring:'#2563eb',circular:'#16a34a',hub_shift:'#ea7c28'};
+  return donut(Object.keys(c).map(k=>({name:DLABEL[k]||k,frac:c[k]/tot,n:c[k],color:col[k]||'#94a3b8'})));
+}
+function recentTable(ds){
+  const rows=ds.slice().sort((a,b)=>(b.evidence.timeline[0]||{ts:''}).ts.localeCompare((a.evidence.timeline[0]||{ts:''}).ts)).slice(0,6);
+  return '<table class="t"><thead><tr><th>Time</th><th>Pattern</th><th>Entity</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>'
+  +rows.map(a=>'<tr class="rowlink" onclick="location.hash=\'#/alertdetail/'+a.id+'\'"><td>'+fmtDate((a.evidence.timeline[0]||{ts:''}).ts)+'</td><td>'+esc(DLABEL[a.detectors[0]]||a.detectors[0])+'</td><td class="mono">'+esc(primaryEntity(a))+'</td><td class="mono">'+inr(alertAmount(a))+'</td><td>'+bdgStatus(a.status)+'</td><td>›</td></tr>').join('')+'</tbody></table>';
+}
+function riskBars(){
+  const m=state.metrics.by_risk||{};
+  const rows=[{name:'Critical',color:'#dc2626'},{name:'High',color:'#f97316'},{name:'Medium',color:'#eab308'},{name:'Low',color:'#16a34a'}].map(r=>({name:r.name,color:r.color,n:m[r.name]||0}));
+  return hbars(rows);
+}
+/* ================= PAGE: Investigations ================= */
+function invStatus(a){return STATUSMAP[a.status]||a.status;}
+function invType(a){const d=a.detectors;
+  if(d.includes('circular')&&d.includes('access_anomaly'))return 'Cross-Domain';
+  if(d.includes('access_anomaly'))return d.length>1?'Cross-Domain':'Insider Threat';
+  return 'Financial Fraud';}
+async function vInv(){
+  const v=$('#view');v.innerHTML='<div class="empty"><span class="spin"></span> loading…</div>';
+  await ensureBase();await allDetails();
+  const tabs=['All','Open','In Progress','Resolved','False Positives'];
+  const counts={All:state.alerts.length,Open:0,'In Progress':0,Resolved:0,'False Positives':0};
+  state.alerts.forEach(a=>{const s=invStatus(a);if(s==='Open')counts.Open++;if(s==='In Progress')counts['In Progress']++;if(s==='Resolved')counts.Resolved++;if(a.ground_truth===false)counts['False Positives']++;});
+  v.innerHTML='<div class="phead"><div><h1 class="p">Investigations</h1><p class="sub">Review and manage ongoing and past investigations, with full context, evidence and case details.</p></div></div>'
+  +'<div class="grid4">'
+  +kpi('🔔','Open Investigations',counts.Open,'#fdecec','#dc2626','<div class="d flat">need triage</div>')
+  +kpi('◷','In Progress',counts['In Progress'],'#eff4ff','#2563eb','<div class="d flat">being worked</div>')
+  +kpi('✓','Resolved',counts.Resolved,'#e9f7ee','#16a34a','<div class="d flat">closed</div>')
+  +kpi('👤','False Positives',counts['False Positives'],'#f1eafe','#7c3aed','<div class="d flat">legit, flagged</div>')
+  +'</div>'
+  +'<div class="cols2"><div class="card"><h3>All Investigations</h3>'
+  +'<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input type="text" id="iq" placeholder="Search investigations..." value="'+esc(state.invQ)+'" style="flex:1;min-width:180px"><button class="btn" onclick="expInv()">⇩ Export</button></div>'
+  +'<div class="tabs">'+tabs.map(t=>'<button class="'+(state.invTab===t?'on':'')+'" onclick="setInvTab(\''+t+'\')">'+t+' ('+counts[t]+')</button>').join('')+'</div>'
+  +'<div id="invTable"></div></div>'
+  +'<div><div class="card"><h3>ϒ Filters</h3>'
+  +'<label class="fl">Investigation Type</label><select id="fType" style="width:100%"><option value="">All Types</option>'+['Financial Fraud','Insider Threat','Cross-Domain'].map(t=>'<option'+(state.invF.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+  +'<label class="fl">Status</label><select id="fStatus" style="width:100%"><option value="">All</option>'+['Open','In Progress','Resolved'].map(t=>'<option'+(state.invF.status===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+  +'<label class="fl">Risk</label><select id="fRisk" style="width:100%"><option value="">All</option>'+['Critical','High','Medium','Low'].map(t=>'<option'+(state.invF.risk===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+  +'<div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="flex:1" onclick="resetInvF()">Reset</button><button class="btn pri" style="flex:1" onclick="applyInvF()">Apply</button></div></div>'
+  +'<div class="card" id="selInv"><h3>Selected Investigation</h3><p class="hint">Click a row to preview.</p></div></div></div>';
+  $('#iq').addEventListener('input',e=>{state.invQ=e.target.value;renderInvTable();});
+  renderInvTable();
+}
+function setInvTab(t){state.invTab=t;vInv();}
+function resetInvF(){state.invF={type:'',status:'',risk:''};state.invQ='';vInv();}
+function applyInvF(){state.invF={type:$('#fType').value,status:$('#fStatus').value,risk:$('#fRisk').value};renderInvTable();}
+function filteredInv(){
+  return state.alerts.filter(a=>{
+    if(state.invTab==='Open'&&invStatus(a)!=='Open')return false;
+    if(state.invTab==='In Progress'&&invStatus(a)!=='In Progress')return false;
+    if(state.invTab==='Resolved'&&invStatus(a)!=='Resolved')return false;
+    if(state.invTab==='False Positives'&&a.ground_truth!==false)return false;
+    if(state.invF.type&&invType(a)!==state.invF.type)return false;
+    if(state.invF.status&&invStatus(a)!==state.invF.status)return false;
+    if(state.invF.risk&&a.risk!==state.invF.risk)return false;
+    if(state.invQ){const q=state.invQ.toLowerCase();
+      if(!(a.id.toLowerCase().includes(q)||a.detectors.join(' ').includes(q)||(a.assignee||'').toLowerCase().includes(q)))return false;}
+    return true;
+  }).sort((a,b)=>RISK_RANK[b.risk]-RISK_RANK[a.risk]);
+}
+function renderInvTable(){
+  const list=filteredInv();
+  $('#invTable').innerHTML='<table class="t"><thead><tr><th>ID</th><th>Type</th><th>Pattern</th><th>Risk Level</th><th>Status</th><th>Detected At</th><th>Actions</th></tr></thead><tbody>'
+  +list.map(a=>'<tr class="rowlink" onclick="selInvRow(\''+a.id+'\')"><td class="mono" style="color:var(--blue);font-weight:700">'+a.id+'</td><td>'+invType(a)+'</td><td>'+detPills(a)+'</td><td>'+bdgRisk(a.risk)+'</td><td>'+bdgStatus(a.status)+'</td><td>'+fmtDate(detDate(a))+'</td><td><button class="btn" onclick="event.stopPropagation();location.hash=\'#/alertdetail/'+a.id+'\'">View</button></td></tr>').join('')
+  +'</tbody></table><div class="pager">Showing '+list.length+' of '+state.alerts.length+' investigations</div>';
+}
+async function selInvRow(id){
+  const a=await detail(id);
+  $('#selInv').innerHTML='<h3>Selected Investigation</h3><div style="display:flex;gap:8px;align-items:center;margin:6px 0"><b class="mono">'+a.id+'</b>'+bdgRisk(a.risk)+'</div>'
+  +'<b>'+esc(DLABEL[a.detectors[0]]||a.detectors[0])+' Pattern</b><p class="hint">'+esc((a.hits[0]||{}).detail||'')+'</p>'
+  +'<dl class="kv"><dt>Detected At</dt><dd>'+fmtDate((a.evidence.timeline[0]||{ts:''}).ts)+'</dd><dt>Status</dt><dd>'+invStatus(a)+'</dd><dt>Entities</dt><dd>'+a.evidence.nodes.filter(n=>n.kind!=='transaction').length+'</dd><dt>Total Amount</dt><dd>'+inr(alertAmount(a))+'</dd></dl>'
+  +'<a class="btn pri" style="width:100%;text-align:center;margin-top:10px" href="#/alertdetail/'+a.id+'">View Full Investigation →</a>';
+}
+function expInv(){
+  const rows=filteredInv().map(a=>[a.id,invType(a),a.detectors.join('+'),a.risk,invStatus(a)].join(','));
+  dl('investigations.csv','ID,Type,Pattern,Risk,Status\n'+rows.join('\n'),'text/csv');
+}
+function dl(name,content,type){const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const l=document.createElement('a');l.href=u;l.download=name;l.click();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+/* ================= PAGE: Alerts queue ================= */
+async function vAlerts(){
+  const v=$('#view');await ensureBase();
+  v.innerHTML='<div class="phead"><div><h1 class="p">Alerts</h1><p class="sub">Every detection, newest first. Open one for the full evidence trail.</p></div></div><div class="card" id="alist"></div>';
+  const ds=await allDetails();
+  const rows=ds.slice().sort((a,b)=>(b.evidence.timeline[0]||{ts:''}).ts.localeCompare((a.evidence.timeline[0]||{ts:''}).ts));
+  $('#alist').innerHTML='<table class="t"><thead><tr><th>Time</th><th>Alert</th><th>Pattern</th><th>Entity</th><th>Amount</th><th>Risk</th><th>Status</th><th></th></tr></thead><tbody>'
+  +rows.map(a=>'<tr class="rowlink" onclick="location.hash=\'#/alertdetail/'+a.id+'\'"><td>'+fmtDate((a.evidence.timeline[0]||{ts:''}).ts)+'</td><td class="mono" style="color:var(--blue);font-weight:700">'+a.id+'</td><td>'+detPills(a)+'</td><td class="mono">'+esc(primaryEntity(a))+'</td><td class="mono">'+inr(alertAmount(a))+'</td><td>'+bdgRisk(a.risk)+'</td><td>'+bdgStatus(a.status)+'</td><td>›</td></tr>').join('')+'</tbody></table>';
+}
+/* ================= PAGE: Alert Detail ================= */
+let alertTab='Overview', focusMode=false, alertNet=null;
+async function vAlertDetail(){
+  const v=$('#view'),id=state.param;
+  v.innerHTML='<div class="empty"><div class="skel" style="height:90px;margin-bottom:12px"></div><div class="skel" style="height:380px"></div><div style="display:none">loading alert…</div>';
+  let a;try{a=await detail(id);}catch(e){v.innerHTML='<div class="empty">Alert not found.</div>';return;}
+  const ev=a.evidence, hits=a.hits||[];
+  const multi=a.detectors.length>1;
+  const patTitle=a.detectors.map(d=>DLABEL[d]||d).join(' + ')+' Pattern';
+  const firstTs=(ev.timeline[0]||{ts:''}).ts;
+  v.innerHTML='<div style="color:var(--mut);font-size:12.5px;margin-bottom:6px"><a href="#/investigations">Investigations</a> → Alert</div>'
+  +'<div class="phead"><div>'+bdgRisk(a.risk)+' <span style="font-size:22px;font-weight:800">Alert #'+a.id.replace('AL-','ALT-')+'</span>'
+  +'<div style="font-weight:700;margin-top:2px">'+esc(patTitle)+'</div><p class="sub">'+esc(headlineFor(a))+'</p>'
+  +'<div style="margin-top:6px">'+detPills(a)+'</div></div></div>'
+  +'<div class="grid2"><div class="card"><dl class="kv"><dt>Detected At</dt><dd>'+fmtDate(firstTs)+'</dd><dt>Created By</dt><dd>System</dd><dt>Status</dt><dd>'+bdgStatus(a.status)+'</dd></dl></div>'
+  +'<div class="card"><dl class="kv"><dt>Risk Level</dt><dd>'+bdgRisk(a.risk)+' <span class="note">'+esc(a.risk_reason||'')+'</span></dd><dt>Entities Involved</dt><dd>'+ev.nodes.filter(n=>n.kind!=='transaction').length+'</dd><dt>Total Amount</dt><dd>'+inr(alertAmount(a))+'</dd></dl></div></div>'
+  +'<div class="card"><div class="tabs">'+['Overview','Evidence Graph','Events','Explanation','Case Actions'].map(t=>'<button class="'+(alertTab===t?'on':'')+'" onclick="setATab(\''+t+'\')">'+t+'</button>').join('')+'</div><div id="atab"></div></div>'
+  +'<div class="cols2"><div class="card"><h3>Related Events</h3><div id="relEvents"></div></div>'
+  +'<div><div class="card"><h3>Alert Details</h3><dl class="kv"><dt>Alert ID</dt><dd class="mono">'+a.id+'</dd><dt>Pattern</dt><dd>'+esc(patTitle)+'</dd><dt>Risk</dt><dd>'+bdgRisk(a.risk)+'</dd><dt>Status</dt><dd>'+bdgStatus(a.status)+'</dd><dt>Detected</dt><dd>'+fmtDate(firstTs)+'</dd><dt>Amount</dt><dd>'+inr(alertAmount(a))+'</dd><dt>Entities</dt><dd>'+ev.nodes.length+'</dd><dt>Detectors</dt><dd>'+detPills(a)+'</dd></dl>'
+  +'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px"><button class="btn pri" onclick="markInv()">🧑 Mark as Investigating</button><button class="btn" onclick="expAlert()">⇩ Export Report</button><button class="btn" onclick="addCase()">📁 Add to Case</button></div></div>'
+  +'<div class="card"><h3>Related Alerts</h3><div id="relAlerts"></div></div></div></div>';
+  renderATab(a);
+  $('#relEvents').innerHTML=eventsTable(ev,a);
+  const rel=state.alerts.filter(x=>x.id!==a.id&&x.detectors.some(d=>a.detectors.includes(d))).slice(0,4);
+  $('#relAlerts').innerHTML=rel.length?rel.map(x=>'<div style="display:flex;gap:9px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="location.hash=\'#/alertdetail/'+x.id+'\'"><span style="width:26px;height:26px;border-radius:50%;background:'+(x.risk==='High'||x.risk==='Critical'?'var(--red-bg)':'var(--orange-bg)')+';display:flex;align-items:center;justify-content:center;font-size:13px">⚠</span><div style="flex:1"><b class="mono">'+x.id+'</b><div class="note">'+esc(DLABEL[x.detectors[0]]||'')+'</div></div>'+bdgRisk(x.risk)+'</div>').join(''):'<div class="empty">No related alerts.</div>';
+}
+function setATab(t){alertTab=t;detail(state.param).then(a=>renderATab(a));}
+function headlineFor(a){
+  const h=(a.hits||[]).find(x=>(x.confidence||'high')==='high')||(a.hits||[])[0];if(!h)return 'Evidence under review.';
+  if(h.type==='circular')return 'Money looped '+(h.cycle||[]).join(' → ')+' → '+(h.cycle||[])[0]+' — '+(h.tx_ids||[]).length+' transfers totaling '+inr(h.total_amount||0)+'.';
+  if(h.type==='structuring')return (h.parts||(h.tx_ids||[]).length)+' transfers just under ₹10,000 moved '+inr(h.total_amount||0)+' from '+h.src+' to '+h.dst+'.';
+  if(h.type==='access_anomaly')return "Employee "+h.emp+"'s access to "+h.account+' was '+(h.kind||'changed')+' '+h.hours_before+' hours before a '+inr(h.total_amount||0)+' transfer.';
+  if(h.type==='hub_shift')return 'Account '+h.account+' suddenly sent money to '+(h.fanout||(h.tx_ids||[]).length)+' different accounts.';
+  return h.detail||'';
+}
+function storyFor(a){
+const hits=a.hits||[];
+const h=hits.filter(x=>(x.confidence||'high')==='high')[0]||hits[0];
+if(!h)return 'Evidence under review.';
+const multi=(a.detectors||[]).length>1;let s='';
+if(h.type==='access_anomaly')s='Employee '+h.emp+' had '+(h.kind||'changed')+' access to '+h.account+' '+h.hours_before+' hours before '+inr(h.total_amount||0)+' left that account. Access first, money second - that ordering is what makes it suspicious rather than routine.';
+else if(h.type==='structuring')s=(h.parts||(h.tx_ids||[]).length)+' transfers just under the reporting threshold moved '+inr(h.total_amount||0)+' from '+h.src+' to '+h.dst+' - split small enough to dodge tripwires, large enough in total to matter.';
+else if(h.type==='circular')s='Money left '+(h.cycle||[])[0]+', passed through '+Math.max(0,(h.cycle||[]).length-1)+' other accounts, and came back - a closed loop totaling '+inr(h.total_amount||0)+'. Loops have no business purpose; they exist to hide where money came from.';
+else if(h.type==='hub_shift')s=h.account+', normally quiet, suddenly sent money to '+(h.fanout||(h.tx_ids||[]).length)+' different destinations.';
+else s=h.detail||'Evidence under review.';
+if(multi)s+=' Two independent patterns point at the same people and accounts - that convergence is what pushed this to '+a.risk+'.';
+return s;}
+function whyNotHigher(a){
+const ds=a.detectors||[];
+const confs=(a.hits||[]).map(h=>h.confidence||'high');
+const best=confs.indexOf('high')>=0?'high':confs.indexOf('medium')>=0?'medium':'low';
+if(a.risk==='Critical')return 'Top level: layering plus insider access (or 3+ detectors) at high confidence. Nothing higher exists.';
+if(a.risk==='High'){if(ds.length>=2)return 'Two independent detectors agree at high confidence - one more independent pattern would make it Critical.';
+return 'A single strong, high-confidence finding. A second independent detector on the same entities would escalate this to Critical.';}
+if(best!=='high')return 'Capped at '+a.risk+': every finding here is '+best+' confidence. One high-confidence finding would raise it.';
+return 'A single standard finding. Corroboration by a second detector, or a high-confidence layering or insider signal, would raise it.';}
+function involvedNodes(a,det){
+const s={};
+(a.hits||[]).forEach(h=>{if(det&&h.type!==det)return;
+(h.tx_ids||[]).forEach(t=>{s[t]=1;});
+['emp','account','src','dst'].forEach(k=>{if(h[k])s[h[k]]=1;});
+(h.cycle||[]).forEach(c=>{s[c]=1;});});
+return s;}
+function highlightDetector(det){
+const net=alertNet;if(!net||!net._nds)return;
+const d0=state.details[state.param];if(!d0)return;
+const keep=involvedNodes(d0,det);
+net._nds.forEach(n=>{const on=!det||keep[n.id];const c=net._ncol[n.id]||{bg:'#eef1f6',bd:'#64748b'};
+net._nds.update({id:n.id,color:on?{background:c.bg,border:c.bd}:{background:'#eef1f6',border:'#c3cad7'},font:{color:on?'#0f1e3d':'#9aa5c0',size:12},opacity:on?1:0.35});});
+net._eds.forEach(e=>{const on=!det||(keep[e.from]&&keep[e.to]);
+net._eds.update({id:e.id,color:{color:on?(net._ecol[e.id]||'#94a3b8'):'#d5dbe7'},opacity:on?1:0.25});});
+document.querySelectorAll('.hl-btn').forEach(b=>{if(b.classList)b.classList.toggle('on',(b.dataset.hl||'')===(det||''));});
+}
+function renderATab(a){
+  const box=$('#atab'),ev=a.evidence;
+  if(alertTab==='Overview'){
+    box.innerHTML='<p>'+esc(a.narrative||headlineFor(a))+'</p><div>'+riskTags(a)+'</div>'+legendHTML();
+  }else if(alertTab==='Evidence Graph'){
+    box.innerHTML='<div class="gtools"><button class="btn" onclick="toggleFocus()">◉ Focus '+(focusMode?'Off':'Mode')+'</button><span id="hlBtns"></span><button class="btn" onclick="gZoom(1.25)">Zoom in</button><span id="hlBtns"></span><button class="btn" onclick="gZoom(0.8)">Zoom out</button><button class="btn" onclick="gFit()">Fit graph</button><button class="btn" onclick="gReset()">Reset</button></div><div id="egraph" style="margin-top:8px"></div>'+legendHTML();
+    alertNet=evGraph($('#egraph'),ev,a,{focus:focusMode});
+  const hb=document.getElementById('hlBtns');
+  if(hb){hb.innerHTML='<button class="btn hl-btn on" data-hl="">All</button>'+a.detectors.map(dd=>'<button class="btn hl-btn" data-hl="'+dd+'">'+esc(DLABEL[dd]||dd)+'</button>').join('');
+  hb.querySelectorAll('.hl-btn').forEach(b=>{b.onclick=()=>highlightDetector(b.dataset.hl||null);});}
+  }else if(alertTab==='Events'){
+    box.innerHTML=eventsTable(ev,a);
+  }else if(alertTab==='Explanation'){
+    box.innerHTML='<div class="story"><b>The story so far:</b> '+esc(storyFor(a))+'</div>'+'<div class="card" style="background:#f6f9ff"><h3>🔍 Investigation Explanation</h3><p><b>This alert fired because:</b></p><ol class="facts">'
+    +(a.hits||[]).map(h=>'<li>'+esc(h.detail)+'</li>').join('')+'</ol><p class="note">Grounded only in evidence above — no invented entities, amounts, or dates. '+(a.narrative_source||'')+'</p></div><div style="margin-top:10px"><div class="card"><h3>Why ruling stands - and what would change it</h3><p>'+esc(whyNotHigher(a))+'</p></div>'+'<div style="margin-top:10px"><b>Key Risk Factors</b><div style="margin-top:6px">'+riskTags(a)+'</div></div>';
+  }else{
+    box.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" onclick="markInv()">Mark as Investigating</button><button class="btn" onclick="expAlert()">⇩ Export Report (JSON)</button><button class="btn" onclick="addCase()">📁 Add to Case</button><select id="asg">'+state.emps.map(e=>'<option'+(e.id===a.assignee?' selected':'')+'>'+e.id+'</option>').join('')+'</select><button class="btn" onclick="reassign()">Reassign</button></div><p class="note">Status/assignee changes save to the live case immediately.</p>';
+  }
+}
+function riskTags(a){
+  const t=new Set(),amt=alertAmount(a);
+  if(amt>=50000)t.add('Large amount');
+  a.detectors.forEach(d=>{if(d==='structuring')t.add('Structuring pattern');if(d==='circular')t.add('Circular flow');if(d==='access_anomaly')t.add('Temporal correlation');if(d==='hub_shift')t.add('Burst activity');});
+  if(a.detectors.length>1)t.add('Cross-domain correlation');
+  return [...t].map(x=>'<span class="tag">'+x+'</span>').join('');
+}
+function eventsTable(ev,a){
+  const txById={};(state.entities?state.entities.transactions:[]).forEach(t=>txById[t.id]=t);
+  return '<table class="t"><thead><tr><th>Time</th><th>Event Type</th><th>Entity</th><th>Details</th><th>Amount</th><th>Status</th></tr></thead><tbody>'
+  +ev.timeline.map(e=>{
+    const isAcc=/access/i.test(e.text);
+    const m=e.text.match(/(T-\d+)/),tx=m?txById[m[1]]:null;
+    return '<tr><td class="mono">'+fmtDate(e.ts)+'</td><td>'+(isAcc?'Access Grant':'Transfer')+'</td><td class="mono">'+esc((e.text.match(/([AET]-[\d]+ → [AET]-[\d]+|[AET]-[\d]+)/)||['—'])[0])+'</td><td>'+esc(e.text)+'</td><td class="mono">'+(tx?inr(tx.amount):'–')+'</td><td>'+bdgStatus(a.status)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+function toggleFocus(){focusMode=!focusMode;detail(state.param).then(a=>renderATab(a));}
+function gZoom(f){if(!alertNet)return;const s=alertNet.getScale();alertNet.moveTo({scale:s*f});}
+function gFit(){if(alertNet)alertNet.fit();}
+function gReset(){if(alertNet){alertNet.moveTo({scale:1});alertNet.fit();}}
+async function markInv(){await api('/api/alerts/'+state.param,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'Under Review'})});
+  state.details[state.param].status='Under Review';Object.assign(state.alerts.find(x=>x.id===state.param),{status:'Under Review'});toast('Marked as Investigating.');vAlertDetail();}
+function expAlert(){window.open('/api/alerts/'+state.param+'/export','_blank');}
+function addCase(){let cs=[];try{cs=JSON.parse(localStorage.getItem('fs_cases')||'[]');}catch(e){}
+  if(!cs.includes(state.param)){cs.push(state.param);localStorage.setItem('fs_cases',JSON.stringify(cs));}
+  location.hash='#/casedetail/'+state.param;}
+async function reassign(){const v=$('#asg').value;await api('/api/alerts/'+state.param,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({assignee:v})});
+  state.details[state.param].assignee=v;toast('Reassigned to '+v);}
+/* ================= PAGE: Red Team ================= */
+const RTPLANS=[
+ {tpl:'circular_transfer',name:'1. Financial Fraud',sub:'Circular transfer between accounts',live:'~1 min, live'},
+ {tpl:'privilege_escalation',name:'2. Insider Threat',sub:'Privilege escalation and misuse',live:'~1 min, live'},
+ {tpl:'structuring',name:'3. Combined Attack',sub:'Escalation + structuring pattern',live:'~1 min, live'}];
+let rtSel='circular_transfer',rtRunning=false;
+async function vRed(){
+  const v=$('#view');await ensureBase();
+  v.innerHTML='<div class="phead"><div><h1 class="p">🛡 Red Team Simulator</h1><p class="sub">Simulate realistic attack scenarios and see how the detection system responds in real time.</p></div><div class="sp"></div><button class="btn" onclick="toast(\'History: simulations run live against the current graph.\')">◷ Simulation History</button></div>'
+  +'<div class="grid4" style="grid-template-columns:repeat(3,1fr)">'+RTPLANS.map(p=>'<div class="card" id="rt-'+p.tpl+'" style="cursor:pointer;'+(rtSel===p.tpl?'border-color:var(--blue);box-shadow:0 0 0 2px #bfd4ff':'')+'" onclick="rtPick(\''+p.tpl+'\')"><b>'+p.name+'</b><p class="hint">'+p.sub+'</p><div class="note">'+p.live+'</div></div>').join('')
+  +'<div class="card" style="display:flex;flex-direction:column;gap:8px;justify-content:center"><label class="fl" style="margin:0">Amount ₹ <input type="number" id="rtAmt" value="15000" style="width:120px"></label><label class="fl" style="margin:0">Splits <input type="number" id="rtSpl" value="6" style="width:70px"></label><button class="btn pri" id="rtGo" onclick="rtGo()">▶ Start Simulation</button><button class="btn" onclick="rtReset()">↻ Reset</button></div></div>'
+  +'<div class="grid2"><div><div class="card"><h3>Live Simulation <span id="rtState" class="note">— idle</span></h3><div id="rtStages"><div class="empty">Pick a scenario and press Start.</div></div><div style="background:var(--gray-bg);border-radius:6px;height:8px;margin-top:8px"><div id="rtBar" style="height:8px;width:0;background:var(--blue);border-radius:6px"></div></div></div>'
+  +'<div class="card"><h3>Attack Graph</h3><div class="gtools"><button class="btn" onclick="gFit2()">Fit to Screen</button></div><div id="egraph" style="margin-top:8px"></div>'+legendHTML()+'<div id="rtFeed" style="margin-top:8px"></div></div>'
+  +'<div class="card"><h3>Simulation Log</h3><div id="rtLog"><div class="empty">No events yet.</div></div></div></div>'
+  +'<div><div class="card" id="rtAlert"><h3>Active Alert</h3><div class="empty">Detection will appear here.</div></div>'
+  +'<div class="card"><h3>Scenario Details</h3><div id="rtMeta"><dl class="kv"><dt>Type</dt><dd>—</dd><dt>Status</dt><dd>Idle</dd></dl></div><button class="btn danger" onclick="rtReset()">■ Stop Simulation</button></div></div></div>';
+}
+function rtPick(t){rtSel=t;vRed();}
+function rtReset(){rtRunning=false;vRed();}
+let rtNet=null;function gFit2(){if(rtNet)rtNet.fit();}
+async function rtGo(){
+  if(rtRunning)return;rtRunning=true;
+  const amt=+($('#rtAmt').value||15000),spl=+($('#rtSpl').value||6);
+  $('#rtState').textContent='— running';
+  const plans=rtSel==='structuring'?[{tpl:'privilege_escalation',amt,splits:0},{tpl:'structuring',amt,splits:spl}]:[{tpl:rtSel,amt,splits:spl}];
+  const allTx=[];
+  for(const [pi,p] of plans.entries()){
+    stage(['Injecting '+(RTPLANS.find(x=>x.tpl===p.tpl)||{name:p.tpl}).name+'…','pending']);
+    let r;try{r=await api('/api/redteam/inject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({template:p.tpl,amount:p.amt,splits:p.splits||6})});}
+    catch(e){rtRunning=false;return;}
+    allTx.push(...(r.injected.tx_ids||[]));
+    logRows(r.injected);
+    const matched=(r.matched_alerts||[])[0];
+    // rebuild local state
+    state.alerts=await api('/api/alerts');state.details={};state.metrics=await api('/api/metrics');state.entities=await api('/api/entities');
+    if(matched){
+      const a=await detail(matched);
+      stagesDone(a,allTx);
+      rtNet=evGraph($('#egraph'),a.evidence,a,{});
+      feed(a);
+      $('#rtAlert').innerHTML='<h3>Active Alert</h3><div style="display:flex;gap:8px;align-items:center">'+bdgRisk(a.risk)+'<b class="mono" style="font-size:18px">'+a.id+'</b></div><p><b>'+esc(a.detectors.map(d=>DLABEL[d]).join(' + '))+' Pattern</b></p><p class="hint">'+esc(headlineFor(a))+'</p><dl class="kv"><dt>Entities</dt><dd>'+a.evidence.nodes.filter(n=>n.kind!=='transaction').length+'</dd><dt>Total Amount</dt><dd>'+inr(alertAmount(a))+'</dd></dl><a class="btn pri" style="width:100%;text-align:center" href="#/alertdetail/'+a.id+'">View Full Investigation →</a>'+'<button class="btn pri" id="replayBtn" style="width:100%;margin-top:8px" onclick="rtReplay()">Replay the attack</button><div class="replay-cap" id="rtCap" style="display:none"></div>';window._lastRt=a;
+const itot=(r.injected.tx_ids||[]).reduce((t,id)=>{const x=state.entities.transactions.find(y=>y.id===id);return t+(x?x.amount:0);},0);
+let sim0={total:0,count:0};try{sim0=JSON.parse(localStorage.getItem('fs_intercepted')||'{"total":0,"count":0}');}catch(e){}
+sim0={total:sim0.total+itot,count:sim0.count+1};try{localStorage.setItem('fs_intercepted',JSON.stringify(sim0));}catch(e){}
+const sa=document.getElementById('rtAlert');if(sa)sa.insertAdjacentHTML('beforeend','<div class="note" style="margin-top:8px">Intercepted in this simulation: <b>'+inr(itot)+'</b> - running total <b>'+inrCr(sim0.total)+'</b> across '+sim0.count+' staged attacks</div>');
+
+      $('#rtMeta').innerHTML='<dl class="kv"><dt>Type</dt><dd>'+esc(RTPLANS.find(x=>x.tpl===rtSel).name)+'</dd><dt>Start Time</dt><dd>'+fmtDate(a.evidence.timeline[0].ts)+'</dd><dt>Duration</dt><dd>live</dd><dt>Status</dt><dd><span class="bdg b-Resolved">Detected</span></dd></dl>';
+    } else {
+      $('#rtStages').innerHTML='<div class="empty">Injected, but no alert matched — widen parameters and retry.</div>';
+    }
+    $('#rtBar').style.width=Math.round(100*(pi+1)/plans.length)+'%';
+  }
+  $('#rtState').textContent='— complete';rtRunning=false;updateBell();
+}
+function stage(items){$('#rtStages').innerHTML=items.map(s=>'<div class="stage"><span class="st-ic st-run">…</span><div>'+s+'</div></div>').join('');}
+function stagesDone(a,txs){
+  const steps=['Attack injected ('+txs.length+' transactions)','Graph updated','Pattern matched: '+a.detectors.map(d=>DLABEL[d]).join(' + '),'Alert '+a.id+' generated ('+a.risk+' risk)'];
+  $('#rtStages').innerHTML=steps.map((s,i)=>'<div class="stage"><span class="st-ic '+(i<steps.length?'st-ok':'st-wait')+'">✓</span><div>'+esc(s)+'</div></div>').join('');
+}
+function logRows(inj){
+  $('#rtLog').innerHTML=(inj.tx_ids||[]).map(t=>'<div class="stage"><span class="st-ic st-ok">✓</span><div style="flex:1"><span class="mono">'+t+'</span> injected ('+esc(inj.template)+')</div><span class="bdg b-Resolved">Detected</span></div>').join('');
+}
+let rtPlaying=false;
+async function rtReplay(){
+const a=window._lastRt;if(!a||rtPlaying)return;rtPlaying=true;
+const btn=document.getElementById('replayBtn');if(btn)btn.disabled=true;
+const cap=document.getElementById('rtCap');cap.style.display='block';
+const ev=a.evidence,timeline=ev.timeline||[];
+const seen=[];
+const steps=timeline.map(t=>{const ids=(t.text.match(/[AET]-\d+/g)||[]).filter(id=>seen.indexOf(id)<0);ids.forEach(id=>seen.push(id));return {ts:t.ts,text:t.text,ids};});
+const el=document.getElementById('egraph');
+const kindById={};ev.nodes.forEach(n=>kindById[n.id]=n.kind);
+const chit=a.detectors.indexOf('circular')>=0?(a.hits||[]).filter(h=>h.type==='circular')[0]:null;
+const pos={};
+if(chit&&chit.cycle){const sOf={},dOf={};
+ev.edges.forEach(e=>{if(kindById[e.to]==='transaction')sOf[e.to]=e.from;if(kindById[e.from]==='transaction')dOf[e.from]=e.to;});
+const txE=Object.keys(sOf).filter(t=>dOf[t]).map(t=>({tx:t,src:sOf[t],dst:dOf[t]}));
+const W=(el.getBoundingClientRect().width)||700;
+Object.assign(pos,cycleLayoutPositions(chit.cycle,txE,W,460));}
+else{const order=[];steps.forEach(s=>s.ids.forEach(id=>{if(order.indexOf(id)<0)order.push(id);}));
+order.forEach((id,i)=>{pos[id]={x:-320+i*110,y:(i%2?60:-60)};});}
+const COL={employee:['#ede9fe','#7c3aed'],account:['#dbeafe','#2563eb'],transaction:['#d1fae5','#059669']};
+const nds=new vis.DataSet(ev.nodes.map(n=>{const c=COL[n.kind]||['#eef1f6','#64748b'];
+return {id:n.id,label:n.label||n.id,title:(n.title||n.id),color:{background:c[0],border:c[1]},shape:n.kind==='transaction'?'box':'dot',font:{color:'#0f1e3d',size:13},hidden:true,x:pos[n.id]?pos[n.id].x:undefined,y:pos[n.id]?pos[n.id].y:undefined};}));
+const eds=new vis.DataSet(ev.edges.map((e,i)=>({id:i,from:e.from,to:e.to,label:e.label||'',title:e.title||'',dashes:!!e.dashes,color:{color:"#94a3b8"},font:{color:"#5b6478",size:10},arrows:'to',hidden:true})));
+rtNet=new vis.Network(el,{nodes:nds,edges:eds},{physics:{enabled:false},interaction:{hover:true}});
+rtNet.fit();
+const shown={};
+for(let k=0;k<steps.length;k++){const st=steps[k];
+st.ids.forEach(id=>{if(nds.get(id)){nds.update({id:id,hidden:false});shown[id]=1;}});
+eds.forEach(e=>{if(!e.hidden)return;if(shown[e.from]&&shown[e.to])eds.update({id:e.id,hidden:false});});
+cap.innerHTML='<b>Step '+(k+1)+'/'+steps.length+'</b> - '+fmtDate(st.ts)+' — '+esc(st.text);
+const bar=document.getElementById('rtBar');if(bar)bar.style.width=Math.round(100*(k+1)/steps.length)+'%';
+await new Promise(r=>setTimeout(r,900));}
+rtNet.fit();
+cap.innerHTML='<b>Attack complete.</b> '+timeline.length+' events, every node real evidence from '+a.id+'.';
+if(btn)btn.disabled=false;rtPlaying=false;
+}
+function feed(a){
+  $('#rtFeed').innerHTML='<h3 style="margin-top:6px">Attack Activity Feed</h3><div class="tl">'+a.evidence.timeline.map(e=>'<div><span class="ts">'+fmtDate(e.ts)+'</span> — '+esc(e.text)+'</div>').join('')+'</div>';
+}
+/* ================= PAGE: Cases ================= */
+function ntCol(a){if(!a.notice)return '<span class="note">--';return '<span class="bdg '+(a.notice==='Closed'?'b-Cleared':a.notice==='Sent'?'b-New':'b-UnderReview')+'>'+a.notice+'</span>';}
+function caseList(){
+  let cs=[];try{cs=JSON.parse(localStorage.getItem('fs_cases')||'[]');}catch(e){}
+  return state.alerts.filter(a=>a.status!=='New'||cs.includes(a.id));
+}
+async function vCases(){
+  const v=$('#view');await ensureBase();
+  const list=caseList();
+  v.innerHTML='<div class="phead"><div><h1 class="p">Cases</h1><p class="sub">Alerts under active review, assigned and tracked to resolution.</p></div></div>'
+  +(list.length?'<div class="card"><table class="t"><thead><tr><th>Case</th><th>Pattern</th><th>Priority</th><th>Status</th><th>Owner</th><th>Notice</th><th>Amount</th><th></th></tr></thead><tbody>'
+   +list.map(a=>'<tr class="rowlink" onclick="location.hash=\'#/casedetail/'+a.id+'\'"><td class="mono" style="color:var(--blue);font-weight:700">CAS-'+a.id.slice(3)+'</td><td>'+detPills(a)+'</td><td>'+((a.risk==='Critical'||a.risk==='High')?'<span class="bdg b-High">High Priority</span>':'<span class="bdg b-Info">Normal</span>')+'</td><td>'+bdgStatus(a.status)+'</td><td>'+esc(a.assignee||'—')+'</td><td class="mono">'+ntCol(a)+'</td><td class="mono">'+inr(alertAmount(a))+'</td><td>›</td></tr>').join('')
+   +'</tbody></table></div>':'<div class="empty">No open cases. Mark an alert as Investigating or use “Add to Case”.</div>');
+}
+async function vCaseDetail(){
+  const v=$('#view'),id=state.param;
+  let a;try{a=await detail(id);}catch(e){v.innerHTML='<div class="empty">Case not found.</div>';return;}
+  const ev=a.evidence;
+  v.innerHTML='<div class="phead"><div>'+((a.risk==='Critical'||a.risk==='High')?'<span class="bdg b-High">High Priority</span>':'<span class="bdg b-Info">Normal Priority</span>')+' <span style="font-size:22px;font-weight:800">Case CAS-'+a.id.slice(3)+'</span>'
+  +'<div style="font-weight:700;margin-top:2px">'+esc(a.detectors.map(d=>DLABEL[d]).join(' + '))+' Pattern</div><p class="sub">'+esc(headlineFor(a))+'</p></div><div class="sp"></div><div style="display:flex;gap:8px"><a class="btn" href="#/alertdetail/'+a.id+'">View Full Graph</a><button class="btn" onclick="expAlert2()">Export Report</button></div></div>'
+  +'<div class="cols2"><div>'
+  +'<div class="card"><h3>Case Summary</h3><dl class="kv"><dt>Pattern</dt><dd>'+detPills(a)+'</dd><dt>Key Entities</dt><dd class="mono">'+esc(ev.nodes.filter(n=>n.kind!=='transaction').slice(0,4).map(n=>n.id).join(', '))+'</dd><dt>Timeline</dt><dd>'+fmtDate((ev.timeline[0]||{ts:''}).ts)+' → '+fmtDate((ev.timeline[ev.timeline.length-1]||{ts:''}).ts)+'</dd><dt>Total Amount</dt><dd>'+inr(alertAmount(a))+'</dd><dt>Risk</dt><dd>'+bdgRisk(a.risk)+' <span class="note">'+esc(a.risk_reason||'')+'</span></dd></dl></div>'
+  +'<div class="card"><h3>Detector Contribution</h3>'+(a.hits||[]).map(h=>'<div class="stage"><span class="st-ic st-ok">✓</span><div><b>'+esc(DLABEL[h.type]||h.type)+'</b> <span class="note">('+(h.confidence||'high')+' confidence)</span><br>'+esc(h.detail)+'</div></div>').join('')+'</div>'
+  +'<div class="card"><h3>Key Findings</h3><ol class="facts">'+(a.hits||[]).map(h=>'<li>'+esc(h.detail)+'</li>').join('')+'</ol></div>'
+  +'<div class="card"><h3>Evidence Graph</h3><div id="egraph"></div>'+legendHTML()+'</div>'
+  +'<div class="card"><h3>Related Events</h3>'+eventsTable(ev,a)+'</div>'
+  +'<div class="card"><h3>Employee Notice & Response</h3>'
+  +'<p class="hint">The subject is told what was noted, that the matter is under investigation, and is invited to give their side. Sending requires recorded HR/Legal sign-off.</p>'
+  +'<div id="noticeBox"><div class="empty">loading notices...</div></div></div>'
+  +'</div><div>'
+  +'<div class="card"><h3>Case Status</h3><dl class="kv"><dt>Status</dt><dd>'+bdgStatus(a.status)+'</dd><dt>Detected</dt><dd>'+fmtDate((ev.timeline[0]||{ts:''}).ts)+'</dd></dl>'
+  +'<label class="fl">Assign To</label><select id="csAsg" style="width:100%"><option value="">unassigned</option>'+state.emps.map(e=>'<option'+(e.id===a.assignee?' selected':'')+'>'+e.id+'</option>').join('')+'</select>'
+  +'<label class="fl">Status</label><select id="csSt" style="width:100%">'+['New','Under Review','Escalated','Cleared'].map(s=>'<option'+(s===a.status?' selected':'')+'>'+s+'</option>').join('')+'</select>'
+  +'<label class="fl">Tags</label><div>'+a.detectors.map(d=>'<span class="tag">'+esc(DLABEL[d]||d)+'</span>').join('')+(a.detectors.length>1?'<span class="tag">Temporal Correlation</span>':'')+'</div>'
+  +'<label class="fl">Notes (stored locally on this machine)</label><textarea id="csNote" rows="4" style="width:100%">'+esc(localStorage.getItem('fs_note_'+id)||'')+'</textarea>'
+  +'<button class="btn pri" style="width:100%;margin-top:8px" onclick="saveCase2()">Save Note & Assignment</button></div>'
+  +'<div class="card"><h3>Case Actions</h3><div style="display:flex;flex-direction:column;gap:8px"><button class="btn" onclick="expAlert2()">Generate Report (JSON / Print)</button><button class="btn" onclick="resolveCase2()">Mark as Resolved</button><button class="btn danger" onclick="delCase2()">Remove from Case List</button></div></div>'
+  +'</div></div>';
+  alertNet=evGraph($('#egraph'),ev,a,{});
+  renderNotices(a);
+}
+function cur(){return state.param;}
+async function saveCase2(){const id=cur();
+  localStorage.setItem('fs_note_'+id,$('#csNote').value);
+  await api('/api/alerts/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:$('#csSt').value,assignee:$('#csAsg').value||null})});
+  state.details[id]=await api('/api/alerts/'+id);Object.assign(state.alerts.find(x=>x.id===id),{status:$('#csSt').value,assignee:$('#csAsg').value||null});
+  toast('Case saved.');}
+function expAlert2(){window.open('/api/alerts/'+cur()+'/export','_blank');}
+async function resolveCase2(){await api('/api/alerts/'+cur(),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'Cleared'})});
+  delete state.details[cur()];state.alerts=await api('/api/alerts');toast('Case resolved.');vCaseDetail();}
+function delCase2(){if(!confirm('Remove this alert from the case list? (The alert itself is kept.)'))return;
+  let cs=[];try{cs=JSON.parse(localStorage.getItem('fs_cases')||'[]');}catch(e){}
+  localStorage.setItem('fs_cases',JSON.stringify(cs.filter(x=>x!==cur())));location.hash='#/cases';}
+/* ---- employee notice & response (right-to-reply) ---- */
+function nBadge(s){const m={Sent:'b-New',Acknowledged:'b-UnderReview',Responded:'b-Escalated',Closed:'b-Cleared'};return '<span class="bdg '+(m[s]||'b-Info')+'>'+s+'</span>';}
+async function renderNotices(a){
+  const box=document.getElementById('noticeBox');if(!box)return;
+  const ns=a.notices||[];
+  let h=ns.length?ns.map((n,k)=>noticeCard(n,k)).join(''):'<div class="empty">No notice sent yet.</div>';
+  h+='<div style="margin-top:10px"><button class="btn" id="newNoticeBtn">+ New notice to employee</button><div id="composeBox" style="display:none;margin-top:8px"></div></div>';
+  box.innerHTML=h;
+  box.querySelectorAll('button[data-act]').forEach(b=>{b.onclick=()=>noticeAct(b.dataset.i,b.dataset.act);});
+  document.getElementById('newNoticeBtn').onclick=()=>{
+    const cb=document.getElementById('composeBox');
+    cb.style.display=cb.style.display==='none'?'block':'none';
+    if(cb.style.display==='block')fillCompose();};
+}
+function noticeCard(n,k){
+  let h='<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0">'
+  +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b class="mono">'+n.id+'</b>'+nBadge(n.status)
+  +'<span>To <b class="mono">'+n.employee+'</b></span><span class="note">sent '+fmtDate(n.sent_at)+' · approved by '+esc(n.approved_by||'?')+'</span></div>'
+  +'<div style="font-weight:700;margin-top:6px">'+esc(n.subject)+'</div>'
+  +'<div class="note" style="white-space:pre-wrap;margin:4px 0">'+esc(n.body)+'</div>';
+  if(n.response)h+='<div class="narr" style="margin:6px 0"><b>Employee response (recorded verbatim):</b><br>'+esc(n.response)+'</div>';
+  h+='<div class="tl" style="max-height:110px">'+n.events.map(e=>'<div><span class="ts">'+fmtDate(e.ts)+'</span> — '+esc(e.event)+' ('+esc(e.by||'?')+')</div>').join('')+'</div>';
+  h+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
+  if(n.status==='Sent')h+='<button class="btn" data-act="ack" data-i="'+k+'">Mark acknowledged</button>';
+  if(n.status==='Acknowledged')h+='<input type="text" id="resp-'+k+'" placeholder="Record employee statement..." style="flex:1;min-width:200px"><button class="btn pri" data-act="resp" data-i="'+k+'">Record response</button>';
+  if(n.status==='Responded')h+='<button class="btn" data-act="close" data-i="'+k+'">Close notice</button>';
+  return h+'</div></div>';
+}
+async function fillCompose(){
+  const cb=document.getElementById('composeBox');
+  try{const d=await api('/api/alerts/'+cur()+'/notice-draft');
+    cb.innerHTML='<label class="fl">To (subject employee)</label><select id="ntEmp" style="width:100%">'+state.entities.employees.map(e=>'<option'+(e.id===d.employee?' selected':'')+'>'+e.id+'</option>').join('')+'</select>'
+    +'<label class="fl">Subject</label><input type="text" id="ntSub" style="width:100%">'
+    +'<label class="fl">Body (facts auto-filled from evidence)</label><textarea id="ntBody" rows="7" style="width:100%"></textarea>'
+    +'<label class="fl">HR/Legal approval (name, required)</label><input type="text" id="ntAppr" style="width:100%" placeholder="e.g. HR-001">'
+    +'<button class="btn pri" id="sendNoticeBtn" style="margin-top:8px">Send notice</button>';
+    document.getElementById('ntSub').value=d.subject;document.getElementById('ntBody').value=d.body;
+    document.getElementById('sendNoticeBtn').onclick=sendNotice;
+  }catch(e){cb.innerHTML='<div class="empty">Could not load draft.</div>';}
+}
+async function sendNotice(){
+  const appr=document.getElementById('ntAppr').value.trim();
+  if(!appr){toast('HR/Legal approval is required before notifying the subject.');return;}
+  try{await api('/api/alerts/'+cur()+'/notices',{method:'POST',headers:{"Content-Type":'application/json'},
+    body:JSON.stringify({employee:document.getElementById('ntEmp').value,subject:document.getElementById('ntSub').value,body:document.getElementById('ntBody').value,approved_by:appr})});
+  }catch(e){return;}
+  state.details[cur()]=await api('/api/alerts/'+cur());toast('Notice sent and logged.');renderNotices(state.details[cur()]);
+}
+async function noticeAct(idx,act){
+  const id=cur(),list=(state.details[id]||{}).notices||[],n=list[+idx];if(!n)return;
+  try{
+    if(act==='ack')await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Acknowledged'})});
+    else if(act==='resp'){const t=document.getElementById('resp-'+idx).value.trim();if(!t){toast('Enter the employee statement first.');return;}
+      await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({response:t})});}
+    else if(act==='close')await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Closed'})});
+  }catch(e){return;}
+  state.details[id]=await api('/api/alerts/'+id);renderNotices(state.details[id]);toast('Notice updated.');
+}
+/* ================= PAGE: Graph Explorer ================= */
+let expNet=null,expSel=null,expData=null;
+async function vExplorer(){
+  const v=$('#view');await ensureBase();
+  v.innerHTML='<div class="phead"><div><h1 class="p">Graph Explorer</h1><p class="sub">Explore relationships and investigate entities across the fraud graph.</p></div></div>'
+  +'<div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div><label class="fl">Entity Type</label><select id="xType"><option value="">All Types</option><option>employee</option><option>account</option><option>transaction</option></select></div>'
+  +'<div><label class="fl">Time Range</label><select id="xTime"><option value="14">Last 14 days</option><option value="30">Last 30 days</option><option value="0">All time</option></select></div>'
+  +'<div style="flex:1;min-width:200px"><label class="fl">Search nodes</label><input type="text" id="xQ" placeholder="Search nodes, relationships, or keywords..." style="width:100%"></div>'
+  +'<div><label class="fl">&nbsp;</label><span><button class="btn pri" onclick="expView(\'graph\')">Graph View</button> <button class="btn" onclick="expView(\'table\')">Table View</button> <button class="btn" onclick="vExplorer()">Reset</button></span></div></div>'
+  +'<div class="cols2" style="grid-template-columns:250px 1fr 300px"><div>'
+  +'<div class="card"><h3>Graph Filters</h3><label class="fl">Node Type</label>'
+  +['employee','account','transaction'].map(t=>'<label style="display:block;font-size:13px;padding:3px 0"><input type="checkbox" data-t="'+t+'" checked onchange="expBuild()"> '+t[0].toUpperCase()+t.slice(1)+'</label>').join('')
+  +'<label class="fl">Relationship</label><label style="display:block;font-size:13px"><input type="checkbox" id="xAcc" checked onchange="expBuild()"> Access / manages</label>'
+  +'<div class="note" style="margin-top:8px">Legend: <span style="color:#7c3aed">●</span> employee <span style="color:#2563eb">●</span> account <span style="color:#059669">●</span> transaction</div></div>'
+  +'<div class="card"><h3>Entities</h3><div id="xList"></div></div></div>'
+  +'<div><div class="card"><div class="gtools" style="margin-bottom:8px"><button class="btn" onclick="expZoom(1.25)">Zoom In</button><button class="btn" onclick="expZoom(0.8)">Zoom Out</button><button class="btn" onclick="expNet&&expNet.fit()">Fit</button><button class="btn" onclick="expFocus()">Focus Mode</button><button class="btn" onclick="expExport()">Export Graph</button></div><div id="egraph"></div><div id="xTbl"></div><div class="card" style="margin:12px 0 0"><h3>Connected Entities</h3><div id="xConn"></div></div></div></div>'
+  +'<div><div class="card" id="xDetail"><h3>Node Details</h3><p class="hint">Click any node.</p></div></div></div>';
+  $('#xTime').addEventListener('change',expBuild);
+  $('#xQ').addEventListener('input',e=>{state.expFilters.q=e.target.value.toLowerCase();expList();});
+  const f=state.param.match(/^[AET]-\d+$/)?state.param:'';
+  if(f)$('#xQ').value=f;
+  expBuild(f||null);
+}
+function expDataset(){
+  const E=state.entities,cut=+($('#xTime')?$('#xTime').value:14);
+  const maxTs=Math.max(...E.transactions.map(t=>new Date(t.ts).getTime()));
+  const txs=E.transactions.filter(t=>!cut||(maxTs-new Date(t.ts).getTime())<=cut*864e5);
+  return {txs,keep:new Set([...E.employees.map(e=>e.id),...E.accounts.map(a=>a.id),...txs.map(t=>t.id)])};
+}
+function expBuild(focusId){
+  const show={};document.querySelectorAll('#view input[data-t]').forEach(c=>show[c.dataset.t]=c.checked);
+  const showAcc=$('#xAcc')?$('#xAcc').checked:true;
+  const {txs,keep}=expDataset();
+  const E=state.entities,nodes=[],edges=[];
+  E.employees.forEach(e=>{if(show.employee)nodes.push({id:e.id,label:e.id,title:e.id+' (employee)',kind:'employee'});});
+  E.accounts.forEach(a=>{if(show.account)nodes.push({id:a.id,label:a.id,title:a.id+' (account)',kind:'account'});});
+  txs.forEach(t=>{if(show.transaction)nodes.push({id:t.id,label:'₹'+Math.round(t.amount/1000)+'k',title:t.id+': '+t.src+'→'+t.dst+' ₹'+t.amount,kind:'transaction'});});
+  const vis2=new Set(nodes.map(n=>n.id));
+  if(showAcc)E.accounts.forEach(a=>{if(a.manager_emp&&vis2.has(a.manager_emp)&&vis2.has(a.id))edges.push({from:a.manager_emp,to:a.id,label:'manages',dashes:true,color:'#7c3aed'});});
+  txs.forEach(t=>{if(vis2.has(t.src)&&vis2.has(t.id)&&vis2.has(t.dst)){edges.push({from:t.src,to:t.id,color:'#94a3b8'});edges.push({from:t.id,to:t.dst,label:'₹'+Math.round(t.amount/1000)+'k',color:'#94a3b8'});}});
+  expData={nodes,edges,txs};
+  expRender(focusId);expList();expConn();
+}
+function expRender(focusId){
+  const el=$('#egraph');$('#xTbl').innerHTML='';
+  const COL={employee:['#ede9fe','#7c3aed'],account:['#dbeafe','#2563eb'],transaction:['#d1fae5','#059669']};
+  expNet=new vis.Network(el,{
+    nodes:new vis.DataSet(expData.nodes.map(n=>{const c=COL[n.kind];return{id:n.id,label:n.label,title:n.title,color:{background:c[0],border:c[1]},shape:n.kind==='transaction'?'box':'dot',font:{color:'#0f1e3d',size:11}};})),
+    edges:new vis.DataSet(expData.edges.map((e,i)=>({id:i,from:e.from,to:e.to,label:e.label||'',title:e.label||'',dashes:!!e.dashes,color:{color:e.color||'#94a3b8'},font:{color:'#5b6478',size:9},arrows:'to'})))},
+    {physics:{stabilization:{iterations:100}},interaction:{hover:true}});
+  expNet.once('stabilizationIterationsDone',()=>expNet.fit());
+  expNet.on('click',p=>{if(p.nodes.length)expSelect(p.nodes[0]);});
+  if(focusId&&expData.nodes.some(n=>n.id===focusId)){expNet.once('stabilizationIterationsDone',()=>{expNet.focus(focusId,{scale:1.4});});expSelect(focusId);}
+}
+const entName=id=>{const e=state.entities.employees.find(x=>x.id===id);if(e)return e.name;const a=state.entities.accounts.find(x=>x.id===id);return a?(a.label||''):'';};
+function expList(){
+  const q=(state.expFilters.q||'').toLowerCase();
+  const match=n=>!q||n.id.toLowerCase().includes(q);
+  const grp=(t)=>expData.nodes.filter(n=>n.kind===t&&match(n)).slice(0,30);
+  $('#xList').innerHTML=['employee','account','transaction'].map(t=>{
+    const g=grp(t);
+    return '<div class="note" style="margin:8px 0 2px">'+t[0].toUpperCase()+t.slice(1)+'s ('+expData.nodes.filter(n=>n.kind===t).length+')</div>'
+    +g.map(n=>'<div class="r mono" style="padding:4px 6px;cursor:pointer;font-size:12px" onclick="expGo(\''+n.id+'\')">› '+n.id+' <span class="note">'+esc(entName(n.id))+'</span></div>').join('');}).join('');
+}
+function expGo(id){if(expNet&&expData.nodes.some(n=>n.id===id)){expNet.focus(id,{scale:1.4});expSelect(id);const el=$('#egraph');if(el)el.scrollIntoView({block:'nearest'});}else toast('Not in current view — widen the time range.');}
+function expZoom(f){if(expNet)expNet.moveTo({scale:expNet.getScale()*f});}
+function expFocus(){
+  if(!expSel){toast('Select a node first.');return;}
+  const nb=new Set([expSel]);expData.edges.forEach(e=>{if(e.from===expSel)nb.add(e.to);if(e.to===expSel)nb.add(e.from);});
+  const all=expNet.body.data.nodes.getIds();
+  all.forEach(id=>{expNet.body.data.nodes.update({id,opacity:nb.has(id)?1:0.12});});
+  toast('Focus mode: neighborhood of '+expSel+' (Reset to clear).');
+}
+function expExport(){dl('subgraph.json',JSON.stringify({nodes:expData.nodes,edges:expData.edges},null,1),'application/json');}
+function expView(v){
+  if(v==='table'){
+    $('#xTbl').innerHTML='<table class="t"><thead><tr><th>Type</th><th>ID</th><th>Detail</th></tr></thead><tbody>'
+    +expData.nodes.slice(0,200).map(n=>'<tr class="rowlink" onclick="expGo(\''+n.id+'\')"><td>'+n.kind+'</td><td class="mono">'+n.id+'</td><td>'+esc(n.title||'')+'</td></tr>').join('')+'</tbody></table>';
+  }else expRender();
+}
+function expSelect(id){
+  expSel=id;const E=state.entities;
+  const emp=E.employees.find(e=>e.id===id),acc=E.accounts.find(a=>a.id===id),tx=E.transactions.find(t=>t.id===id);
+  let h='';
+  if(emp)h='<b style="font-size:16px">'+id+'</b> '+esc(emp.name)+' <span class="note">Employee</span><dl class="kv"><dt>Department</dt><dd>'+esc(emp.dept)+'</dd><dt>Role</dt><dd>'+esc(emp.role)+'</dd><dt>Manager</dt><dd>'+esc(emp.manager||'—')+'</dd></dl>';
+  else if(acc){const rel=E.transactions.filter(t=>t.src===id||t.dst===id);
+    h='<b style="font-size:16px">'+id+'</b> '+esc(acc.label||'')+' <span class="note">Account</span><dl class="kv"><dt>Account</dt><dd>'+esc(acc.label||acc.customer)+'</dd><dt>Managed by</dt><dd>'+esc(acc.manager_emp||'—')+'</dd><dt>Balance</dt><dd>'+inr(acc.balance)+'</dd><dt>Transactions</dt><dd>'+rel.length+'</dd></dl>';}
+  else if(tx)h='<b style="font-size:16px">'+id+'</b> <span class="note">Transaction</span> '+(tx.ground_truth_fraud?'<span class="bdg b-High">demo fraud label</span>':'')+'<dl class="kv"><dt>Route</dt><dd class="mono">'+tx.src+' → '+tx.dst+'</dd><dt>Amount</dt><dd>'+inr(tx.amount)+'</dd><dt>Time</dt><dd>'+fmtDate(tx.ts)+'</dd><dt>Type</dt><dd>'+tx.type+'</dd></dl>';
+  const nb1=expData.edges.filter(e=>e.from===id||e.to===id).slice(0,12);
+  h+='<h3 style="margin-top:10px">Relationships</h3>'+(nb1.length?nb1.map(e=>'<div class="stage"><div style="flex:1"><span class="mono">'+esc(e.from===id?e.to:e.from)+'</span> <span class="note">'+esc(e.label||'linked')+'</span></div></div>').join(''):'<div class="empty">None in view.</div>');
+  const inAlert=state.alerts.find(a=>(a.tx_ids||[]).includes(id));
+  h+='<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">'
+  +(inAlert?'<a class="btn pri" href="#/alertdetail/'+inAlert.id+'">View in Investigation</a>':'')
+  +'<button class="btn" onclick="expExport()">Export Subgraph</button></div>';
+  $('#xDetail').innerHTML=h;
+  expConn();
+}
+function expConn(){
+  if(!$('#xConn'))return;
+  const rows=(expSel?expData.edges.filter(e=>e.from===expSel||e.to===expSel):expData.edges).slice(0,8);
+  $('#xConn').innerHTML=rows.length?'<table class="t"><tbody>'+rows.map(e=>'<tr><td class="mono">'+esc(e.from)+' → '+esc(e.to)+'</td><td>'+esc(e.label||'—')+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Select a node to see its connections.</div>';
+}
+/* ================= PAGE: Reports ================= */
+async function vReports(){
+  const v=$('#view');await ensureBase();
+  v.innerHTML='<div class="phead"><div><h1 class="p">Reports</h1><p class="sub">Generate compliance-ready exports from any alert. JSON downloads the structured evidence; Print produces a formatted report.</p></div></div>'
+  +'<div class="card"><label class="fl">Select alert</label><select id="rpSel">'+state.alerts.map(a=>'<option value="'+a.id+'">'+a.id+' — '+(DLABEL[a.detectors[0]]||'')+' ('+a.risk+')</option>').join('')+'</select> '
+  +'<button class="btn pri" onclick="rpGen()">Generate</button> <button class="btn" onclick="window.print()">Print</button></div>'
+  +'<div class="card" id="rpOut"><div class="empty">Choose an alert to preview its report.</div></div>';
+}
+async function rpGen(){
+  const a=await detail($('#rpSel').value),ev=a.evidence;
+  $('#rpOut').innerHTML='<h3>Investigation Report — '+a.id+'</h3><dl class="kv"><dt>Pattern</dt><dd>'+esc(a.detectors.map(d=>DLABEL[d]).join(' + '))+'</dd><dt>Risk</dt><dd>'+a.risk+' — '+esc(a.risk_reason||'')+'</dd><dt>Status</dt><dd>'+invStatus(a)+'</dd><dt>Assignee</dt><dd>'+esc(a.assignee||'—')+'</dd><dt>Amount</dt><dd>'+inr(alertAmount(a))+'</dd><dt>Narrative</dt><dd>'+esc(a.narrative||'')+'</dd></dl>'
+  +'<h3>Timeline</h3><div class="tl">'+ev.timeline.map(e=>'<div><span class="ts">'+fmtDate(e.ts)+'</span> — '+esc(e.text)+'</div>').join('')+'</div>'
+  +'<h3>Findings</h3><ol class="facts">'+(a.hits||[]).map(h=>'<li>'+esc(h.detail)+'</li>').join('')+'</ol>'
+  +'<h3>Investigator notes</h3><p>'+esc(localStorage.getItem('fs_note_'+a.id)||'(none)')+'</p>'
+  +'<div class="noprint" style="margin-top:10px"><button class="btn pri" onclick="window.open(\'/api/alerts/'+a.id+'/export\',\'_blank\')">Download JSON</button></div>';
+}
+/* ================= PAGE: Settings ================= */
+async function vSettings(){
+  const v=$('#view');await ensureBase();const m=state.metrics;
+  v.innerHTML='<div class="phead"><div><h1 class="p">Settings</h1><p class="sub">System configuration and data management.</p></div></div>'
+  +'<div class="card"><h3>Detection performance</h3><dl class="kv"><dt>Known-pattern accuracy</dt><dd>'+m.accuracy+'</dd><dt>False positive rate</dt><dd>'+m.false_positive_rate+'</dd><dt>Recall</dt><dd>'+m.recall+'</dd><dt>Stress test</dt><dd>'+(m.stress_test.scenarios?Math.round(m.stress_test.scenarios._overall.catch_rate*100)+'% caught ('+m.stress_test.scenarios._overall.caught_tx+'/'+m.stress_test.scenarios._overall.total_tx+')':'—')+'</dd><dt>Narrative source</dt><dd>'+esc((state.alerts.length&&state.details[state.alerts[0].id]||{}).narrative_source||'template-grounded')+'</dd></dl></div>'
+  +'<div class="card"><h3>Detector thresholds (current)</h3><dl class="kv"><dt>Circular</dt><dd>cycles ≤ 5 nodes, 72h window (108h low tier), min leg ₹3,000</dd><dt>Structuring</dt><dd>≥ 3 sub-threshold parts, 48h window, ₹10,000 threshold</dd><dt>Access anomaly</dt><dd>escalation ≤ 72h high / ≤ 120h medium; grant ≤ 24h + ₹50,000</dd><dt>Hub shift</dt><dd>≥ 6 counterparties / 7d high; ≥ 8 / 10.5d medium</dd></dl><p class="note">Thresholds are versioned with the backend; changes require a code update and re-run of the stress test.</p></div>'
+  +'<div class="card"><h3>Data</h3><p class="hint">Dataset: '+esc(m.dataset||'')+' — '+m.n_tx+' transactions, '+state.entities.employees.length+' employees, '+state.entities.accounts.length+' accounts.</p><button class="btn danger" onclick="if(confirm(\'Regenerate all demo data?\'))api(\'/api/bootstrap\',{method:\'POST\'}).then(()=>{state.alerts=[];state.details={};state.metrics=null;toast(\'Rebuilt.\');})">Rebuild demo data</button></div>'
+  +'<div class="card"><h3>Methodology</h3><p class="hint">PaySim-calibrated synthetic transactions + synthetic HR/access layer (real PaySim CSV can be dropped into <span class="mono">data/</span>). Transparent graph rules, no black-box model — every alert carries its evidence subgraph.</p></div>';
+}
+/* ================= global search + notifications ================= */
+function buildIndex(){
+  const E=state.entities,idx=[];
+  E.employees.forEach(e=>idx.push({t:'Employee',id:e.id,sub:e.name+' - '+e.dept+' · '+e.role,go:'#/explorer/'+e.id}));
+  E.accounts.forEach(a=>idx.push({t:'Account',id:a.id,sub:(a.label||''),go:'#/explorer/'+a.id}));
+  E.transactions.forEach(t=>idx.push({t:'Transaction',id:t.id,sub:t.src+' → '+t.dst+' '+inr(t.amount),go:'#/explorer/'+t.id}));
+  state.alerts.forEach(a=>idx.push({t:'Alert',id:a.id,sub:(DLABEL[a.detectors[0]]||'')+' · '+a.risk,go:'#/alertdetail/'+a.id}));
+  return idx;
+}
+let searchIdx=null;
+async function gsearch(q){
+  await ensureBase();if(!searchIdx)searchIdx=buildIndex();
+  q=q.trim().toLowerCase();if(!q)return [];
+  return searchIdx.filter(r=>(r.id+' '+r.sub).toLowerCase().includes(q)).slice(0,12);
+}
+function updateBell(){
+  const n=state.alerts.filter(a=>a.status==='New').length;
+  $('#bellN').textContent=n;$('#bellN').style.display=n?'block':'none';
+}
+function initChrome(){
+  $('#gq').addEventListener('input',async e=>{
+    const box=$('#sdrop'),rs=await gsearch(e.target.value);
+    if(!rs.length){box.style.display='none';return;}
+    box.innerHTML=rs.map((r,i)=>'<div class="r" data-i="'+i+'"><b>'+r.t+'</b><span class="mono">'+esc(r.id)+'</span><span class="note">'+esc(r.sub)+'</span></div>').join('');
+    box.style.display='block';
+    box.querySelectorAll('.r').forEach(el=>el.onclick=()=>{box.style.display='none';$('#gq').value='';location.hash=rs[+el.dataset.i].go;});
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.search'))$('#sdrop').style.display='none';if(!e.target.closest('#bell')&&!e.target.closest('#ndrop'))$('#ndrop').style.display='none';});
+  $('#bell').onclick=async()=>{
+    await ensureBase();
+    const news=state.alerts.filter(a=>a.status==='New').slice(0,8);
+    const nd=$('#ndrop');
+    nd.innerHTML=news.length?news.map(a=>'<div class="r" onclick="location.hash=\'#/alertdetail/'+a.id+'\';$(\'#ndrop\').style.display=\'none\'"><b>'+a.id+'</b> '+bdgRisk(a.risk)+'<br><span class="note">'+esc(DLABEL[a.detectors[0]]||'')+'</span></div>').join(''):'<div class="r">No new alerts.</div>';
+    nd.style.display=nd.style.display==='block'?'none':'block';
+  };
+}
+/* ---- demo role switch + employee inbox ---- */
+async function initActor(){
+  await ensureBase().catch(()=>{});
+  const sel=document.getElementById('actorSel');if(!sel||sel.options.length)return;
+  sel.innerHTML='<option value="investigator">Investigator (John Doe)</option>'+(state.emps||[]).map(e=>'<option value="+e.id+">'+e.id+' — employee</option>').join('');
+  sel.value=actor();
+  const up=()=>{const a=actor();document.getElementById('avInit').textContent=a==='investigator'?'JD':a.slice(-3);};up();
+  sel.onchange=()=>{localStorage.setItem('fs_actor',sel.value);up();renderMenu();location.hash=sel.value==='investigator'?'#/home':'#/inbox';};
+}
+async function vInbox(){
+  const v=document.getElementById('view');
+  v.innerHTML='<div class="empty">Loading your notices...</div>';
+  let mine;try{mine=await api('/api/notices/mine');}catch(e){v.innerHTML='<div class="empty">You are viewing as the investigation team. Switch to an employee above to see personal notices.</div>';return;}
+  const me=actor();
+  let h='<div class="phead"><div><h1 class="p">My Notices</h1><p class="sub">'+me+' — compliance notices addressed to you. Acknowledge receipt and give your side; your words attach to the case file unchanged.</p></div></div>';
+  if(!mine.length)h+='<div class="empty">No notices addressed to you. Nothing is under investigation against you.</div>';
+  h+=mine.map(m=>{
+    const n=m.notice;
+    let c='<div class="card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+nBadge(n.status)+'<b>Case '+m.alert_id+'</b><span class="note">'+(m.detectors||[]).join('+')+'</span></div>'
+    +'<div style="font-weight:700;margin:8px 0 2px">'+esc(n.subject)+'</div>'
+    +'<div class="note" style="white-space:pre-wrap">'+esc(n.body)+'</div>';
+    if(n.response)c+='<div class="narr" style="margin:8px 0">'+esc(n.response)+'</div>';
+    c+='<div style="margin-top:8px;display:flex;gap:8px">';
+    if(n.status==='Sent')c+='<button class="btn pri" data-n="'+n.id+'" data-a="ack">Acknowledge receipt</button>';
+    if(n.status!=='Closed'&&n.status!=='Responded')c+='<input type="text" placeholder="Type your statement here..." style="flex:1"><button class="btn pri" data-n="'+n.id+'" data-a="resp">Send my response</button>';
+    return c+'</div></div>';
+  }).join('');
+  v.innerHTML=h;
+  v.querySelectorAll('button[data-a]').forEach(b=>{b.onclick=()=>inboxAct(b.dataset.n,b.dataset.a,b);});
+}
+async function inboxAct(nid,act,btn){
+  let mine;try{mine=await api('/api/notices/mine');}catch(e){return;}
+  const m=mine.filter(x=>x.notice.id===nid)[0];if(!m)return;
+  try{
+    if(act==='ack')await api('/api/alerts/'+m.alert_id+'/notices/'+nid,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Acknowledged'})});
+    else{const inp=btn.closest('.card').querySelector('input');const t=inp?inp.value.trim():'';if(!t){toast('Type your statement first.');return;}
+      await api('/api/alerts/'+m.alert_id+'/notices/'+nid,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({response:t})});}
+  }catch(e){return;}
+  toast('Recorded.');vInbox();
+}
+initChrome();initActor();nav();
+
+
+
+</script>
+</body>
+</html>

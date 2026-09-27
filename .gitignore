@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# Generated demo state (auto-bootstraps on first run)
+backend/store.json
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
