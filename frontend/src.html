@@ -998,7 +998,8 @@ async function initActor(){
 async function vInbox(){
   const v=document.getElementById('view');
   v.innerHTML='<div class="empty">Loading your notices...</div>';
-  let mine;try{mine=await api('/api/notices/mine');}catch(e){v.innerHTML='<div class="empty">You are viewing as the investigation team. Switch to an employee above to see personal notices.</div>';return;}
+  if(actor()==='investigator'){v.innerHTML='<div class="empty">You are viewing as the investigation team. Switch to an employee above to see personal notices.</div>';return;}
+  let mine;try{mine=await api('/api/notices/mine');}catch(e){v.innerHTML='<div class="empty">You are viewing as the investigation team.</div>';return;}
   const me=actor();
   let h='<div class="phead"><div><h1 class="p">My Notices</h1><p class="sub">'+me+' — compliance notices addressed to you. Acknowledge receipt and give your side; your words attach to the case file unchanged.</p></div></div>';
   if(!mine.length)h+='<div class="empty">No notices addressed to you. Nothing is under investigation against you.</div>';
