@@ -33,12 +33,8 @@ Set `ANTHROPIC_API_KEY` for LLM narratives; otherwise grounded templates are use
 3. **Natural-language graph query** — NL Query tab (5 scoped shapes: touched-before-transfer, neighborhoods, cycles, structuring pairs, large transfers).
 4. **Risk propagation** — at-risk neighbors by decaying BFS on each alert.
 5. **SAR-style export** — evidence JSON export per case (LLM SAR draft: extend `intel.llm_narrative`).
-6. **Employee notice & response** — per-case right-to-reply: HR/Legal-gated notification stating the
-   noted facts and investigation status, Sent→Acknowledged→Responded→Closed tracking, and the
-   employee's verbatim statement attached to the case file and exports.
-7. **Employee view (role switch)** — top-bar "View as" switcher plus a personal inbox: employees see
-   and answer only their own notices (`X-Actor` identity, server-enforced: no cross-employee reads,
-   no self-closing, no case edits, no simulations).
+6. **Watchlist verdicts** — record findings per person right from a case's Linked People card
+   (Suspect / Guilty / Cleared); anyone Guilty collects on a dedicated Watchlist page.
 8. **Explainability layer** — hover/click any jargon term for a plain-English definition; every alert
    opens its Explanation tab with a story-style summary, a "why this level (and what would change it)"
    box, and per-detector graph highlighting (dim everything a detector didn't fire on).

@@ -1,7 +1,7 @@
 """Sentinel Graph API — FastAPI backend serving fused graph + detectors + cases."""
 from __future__ import annotations
 import io, json
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -70,7 +70,6 @@ def alerts():
              "det_conf": {d: next((h.get("confidence", "high") for h in a.get("hits", [])
                                    if h.get("type") == d), "high") for d in a["detectors"]},
              "ground_truth": a.get("ground_truth", False),
-             "notice": ((a.get("notices") or [None])[-1] or {}).get("status"),
              "status": a["status"], "assignee": a["assignee"],
              "tx_count": len(a["tx_ids"]), "risk_reason": a["risk_reason"]} for a in s["alerts"]]
 
@@ -88,10 +87,8 @@ class CasePatch(BaseModel):
     assignee: Optional[str] = None
 
 @app.patch("/api/alerts/{aid}")
-def patch_case(aid: str, p: CasePatch, request: Request):
+def patch_case(aid: str, p: CasePatch):
     s = get_store()
-    if _actor(request, s):
-        raise HTTPException(403, "employees cannot modify cases")
     a = next((x for x in s["alerts"] if x["id"] == aid), None)
     if not a: raise HTTPException(404, "alert not found")
     if p.status:
@@ -111,131 +108,10 @@ def export_case(aid: str):
     buf = io.StringIO()
     json.dump({"case": a["id"], "risk": a["risk"], "risk_reason": a["risk_reason"],
                "status": a["status"], "assignee": a["assignee"],
-               "narrative": a.get("narrative"), "evidence": a["evidence"],
-               "notices": a.get("notices", [])}, buf, indent=1)
+               "narrative": a.get("narrative"), "evidence": a["evidence"]}, buf, indent=1)
     buf.seek(0)
     return StreamingResponse(iter([buf.getvalue()]), media_type="application/json",
         headers={"Content-Disposition": f"attachment; filename={aid}-evidence.json"})
-
-# ---------- Employee notice & response (right-to-reply) ----------
-# Notifying the subject is a sensitive step: it requires recorded HR/Legal sign-off,
-# uses only facts already in the evidence, and tracks Sent→Acknowledged→Responded→Closed.
-
-def _notice_employee_default(a: dict):
-    for h in a.get("hits", []):
-        if h.get("type") == "access_anomaly" and h.get("emp"):
-            return h["emp"]
-    return None
-
-@app.get("/api/alerts/{aid}/notice-draft")
-def notice_draft(aid: str, request: Request):
-    s = get_store()
-    if _actor(request, s):
-        raise HTTPException(403, "drafts are a compose tool for the investigation team")
-    a = next((x for x in s["alerts"] if x["id"] == aid), None)
-    if not a: raise HTTPException(404, "alert not found")
-    tl = (a.get("evidence") or {}).get("timeline", [])
-    first = tl[0]["ts"][:16].replace("T", " ") if tl else "—"
-    facts = "; ".join(h.get("detail", "") for h in a.get("hits", []))
-    emp = _notice_employee_default(a)
-    body = (
-        f"You are receiving this notice because activity linked to you has been flagged for review under case {a['id']}.\n\n"
-        f"What was noted: {facts}\n\n"
-        f"Status: the matter is Under Investigation. No conclusion has been reached.\n\n"
-        f"Your side: please reply with any context you can provide (authorization, business purpose, supporting references). "
-        f"Your response will be attached to the case file unchanged.\n\n"
-        f"Do not alter, delete, or discuss related records outside the review channel while this notice is open."
-    )
-    return {"employee": emp, "subject": f"Compliance review notice — case {a['id']} (evidence dated {first})", "body": body}
-
-class NoticeIn(BaseModel):
-    employee: str
-    subject: str
-    body: str
-    approved_by: Optional[str] = None
-
-class NoticePatch(BaseModel):
-    status: Optional[str] = None  # Acknowledged | Responded | Closed
-    response: Optional[str] = None
-    by: Optional[str] = None
-
-def _now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat(timespec="seconds")
-
-def _actor(request: Request, s: dict) -> Optional[str]:
-    """Demo role identity from X-Actor header. Returns an employee id when the caller
-    acts as an employee, else None (investigator). Unknown ids are rejected."""
-    a = (request.headers.get("x-actor") or "investigator").strip()
-    if a.lower() == "investigator":
-        return None
-    if any(e["id"] == a for e in s["employees"]):
-        return a
-    raise HTTPException(400, "unknown actor (use 'investigator' or a valid employee id)")
-
-@app.get("/api/notices/mine")
-def my_notices(request: Request):
-    s = get_store()
-    emp = _actor(request, s)
-    if not emp:
-        raise HTTPException(403, "switch to an employee view to see personal notices")
-    out = []
-    for a in s["alerts"]:
-        for n in a.get("notices", []):
-            if n["employee"] == emp:
-                out.append({"alert_id": a["id"], "risk": a["risk"],
-                            "detectors": a["detectors"], "notice": n})
-    return out
-
-@app.post("/api/alerts/{aid}/notices")
-def create_notice(aid: str, n: NoticeIn, request: Request):
-    s = get_store()
-    if _actor(request, s):
-        raise HTTPException(403, "employees cannot issue notices")
-    a = next((x for x in s["alerts"] if x["id"] == aid), None)
-    if not a: raise HTTPException(404, "alert not found")
-    if not n.approved_by:
-        raise HTTPException(400, "HR/Legal approval required before notifying the subject (pass approved_by)")
-    if not any(e["id"] == n.employee for e in s["employees"]):
-        raise HTTPException(400, "unknown employee")
-    a.setdefault("notices", [])
-    nid = f"N-{aid[3:]}-{len(a['notices']) + 1:02d}"
-    notice = {"id": nid, "employee": n.employee, "subject": n.subject, "body": n.body,
-              "status": "Sent", "approved_by": n.approved_by, "sent_at": _now(),
-              "response": None, "events": [{"ts": _now(), "event": "Sent", "by": n.approved_by}]}
-    a["notices"].append(notice)
-    save_store(s)
-    return notice
-
-@app.patch("/api/alerts/{aid}/notices/{nid}")
-def patch_notice(aid: str, nid: str, p: NoticePatch, request: Request):
-    s = get_store()
-    a = next((x for x in s["alerts"] if x["id"] == aid), None)
-    if not a: raise HTTPException(404, "alert not found")
-    n = next((x for x in a.get("notices", []) if x["id"] == nid), None)
-    if not n: raise HTTPException(404, "notice not found")
-    emp = _actor(request, s)
-    if emp and emp != n["employee"]:
-        raise HTTPException(403, "employees may only act on their own notices")
-    if emp and p.status == "Closed":
-        raise HTTPException(403, "only the investigation team can close a notice")
-    order = ["Sent", "Acknowledged", "Responded", "Closed"]
-    if p.status:
-        if p.status not in order[1:]:
-            raise HTTPException(400, "bad status")
-        if order.index(p.status) < order.index(n["status"]):
-            raise HTTPException(400, "cannot move notice backwards")
-        if p.status == "Responded" and not (p.response or n["response"]):
-            raise HTTPException(400, "a response text is required to mark Responded")
-        n["status"] = p.status
-        n["events"].append({"ts": _now(), "event": p.status, "by": p.by or n["employee"]})
-    if p.response is not None:
-        n["response"] = p.response
-        if n["status"] in ("Sent", "Acknowledged"):
-            n["status"] = "Responded"
-            n["events"].append({"ts": _now(), "event": "Responded", "by": p.by or n["employee"]})
-    save_store(s)
-    return n
 
 @app.get("/api/metrics")
 def metrics():
@@ -266,16 +142,37 @@ def entities():
     return {"employees": s["employees"], "accounts": s["accounts"],
             "transactions": s["transactions"]}
 
+
+class VerdictIn(BaseModel):
+    employee: str
+    status: str
+    case_id: Optional[str] = None
+    note: Optional[str] = None
+
+@app.get("/api/verdicts")
+def verdicts():
+    return get_store().setdefault('verdicts', {})
+
+@app.post("/api/verdicts")
+def set_verdict(v: VerdictIn):
+    from datetime import datetime
+    s = get_store()
+    if v.status not in ('Suspect', 'Guilty', 'Cleared'):
+        raise HTTPException(400, 'bad status')
+    if not any(e['id'] == v.employee for e in s['employees']):
+        raise HTTPException(400, 'unknown employee')
+    s.setdefault('verdicts', {})[v.employee] = {'status': v.status, 'case_id': v.case_id, 'note': v.note, 'updated': datetime.utcnow().isoformat(timespec='seconds')}
+    save_store(s)
+    return s['verdicts'][v.employee]
+
 class InjectReq(BaseModel):
     template: str = "circular_transfer"
     amount: float = 15000.0
     splits: int = 6
 
 @app.post("/api/redteam/inject")
-def inject(r: InjectReq, request: Request):
+def inject(r: InjectReq):
     s = get_store()
-    if _actor(request, s):
-        raise HTTPException(403, "simulations are run by the investigation team")
     if r.template == "circular_transfer":
         info = redteam.inject_circular_transfer(s, amount=r.amount)
     elif r.template == "structuring":

@@ -167,7 +167,7 @@ table.t tbody tr{transition:background .12s ease}
   <div class="search"><span class="ic">⌕</span><input id="gq" placeholder="Search by entity, account, transaction or alert..." autocomplete="off"><div class="sdrop" id="sdrop"></div></div>
   <div class="topright">
     <span class="bell" id="bell">🔔<span class="n" id="bellN">0</span></span>
-    <span class="user"><span class="avatar" id="avInit">JD</span><select id="actorSel" title="Demo role switch"></select> ▾</span>
+    <span class="user"><span class="avatar">JD</span> John Doe</span>
   </div>
   <div class="ndrop" id="ndrop"></div>
 </header>
@@ -180,7 +180,7 @@ table.t tbody tr{transition:background .12s ease}
 "use strict";
 /* ================= core ================= */
 const $=s=>document.querySelector(s);
-function actor(){return localStorage.getItem('fs_actor')||'investigator';}async function api(u,o){o=o||{};o.headers=Object.assign({"X-Actor":actor()},o.headers||{});let r;try{r=await fetch(u,o);}catch(e){toast('Network error — is the backend running?');throw e;}
+async function api(u,o){let r;try{r=await fetch(u,o);}catch(e){toast('Network error — is the backend running?');throw e;}
   if(!r.ok){toast('Request failed ('+r.status+')');throw new Error(r.status);}return r.json();}
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',4200);}
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -320,16 +320,16 @@ const NAV=[
  {k:'investigations',t:'Investigations',ic:'M11 4a7 7 0 105.2 12.3L21 21l-1.5-1.5M8 11a3 3 0 106 0 3 3 0 00-6 0z'},
  {k:'alerts',t:'Alerts',ic:'M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 004 0'},
  {k:'redteam',t:'Red Team Simulator',ic:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zM9.5 12l2 2 3.5-4'},
- {k:'cases',t:'Cases',ic:'M4 7h16M4 7v12h16V7M9 7V5h6v2'},{k:'inbox',t:'My Notices',ic:'M4 6h16v12H4zM4 10h16'},
+ {k:'cases',t:'Cases',ic:'M4 7h16M4 7v12h16V7M9 7V5h6v2'},{k:'watchlist',t:'Watchlist',ic:'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 12a3 3 0 100-6 3 3 0 000 6z'},
  {k:'explorer',t:'Graph Explorer',ic:'M6 6a2 2 0 104 0 2 2 0 00-4 0zM16 16a2 2 0 104 0 2 2 0 00-4 0zM8 7l8 8M6 18l4-4M14 10l4-2'},
  {k:'reports',t:'Reports',ic:'M6 2h9l5 5v15H6zM14 2v6h6M9 13h7M9 17h7'},
  {k:'settings',t:'Settings',ic:'M4 8h4l2-3h4l2 3h4v12H4zM12 16a3 3 0 100-6 3 3 0 000 6z'}];
 function renderMenu(){
-  $('#menu').innerHTML=NAV.filter(n=>n.k!=='inbox'||actor()!=='investigator').map(n=>'<a href="#/'+n.k+'" class="'+(state.route===n.k||(state.route==='alertdetail'&&(n.k==='alerts'||n.k==='investigations'))||(state.route==='casedetail'&&n.k==='cases')?'on':'')+'"><svg viewBox="0 0 24 24"><path d="'+n.ic+'"/></svg>'+n.t+'</a>').join('');
+  $('#menu').innerHTML=NAV.map(n=>'<a href="#/'+n.k+'" class="'+(state.route===n.k||(state.route==='alertdetail'&&(n.k==='alerts'||n.k==='investigations'))||(state.route==='casedetail'&&n.k==='cases')?'on':'')+'"><svg viewBox="0 0 24 24"><path d="'+n.ic+'"/></svg>'+n.t+'</a>').join('');
 }
 function nav(){const h=(location.hash||'#/home').slice(2).split('/');state.route=h[0]||'home';state.param=decodeURIComponent(h[1]||'');
   renderMenu();window.scrollTo(0,0);
-  ({home:vHome,investigations:vInv,alerts:vAlerts,alertdetail:vAlertDetail,redteam:vRed,cases:vCases,casedetail:vCaseDetail,explorer:vExplorer,reports:vReports,settings:vSettings,inbox:vInbox}[state.route]||vHome)();}
+  ({home:vHome,investigations:vInv,alerts:vAlerts,alertdetail:vAlertDetail,redteam:vRed,cases:vCases,casedetail:vCaseDetail,explorer:vExplorer,reports:vReports,settings:vSettings,watchlist:vWatchlist}[state.route]||vHome)();}
 window.addEventListener('hashchange',nav);
 const GLOSSARY={circular:'Money moving in a closed loop (A to B to C and back to A). The classic layering step of money laundering.'
 ,structuring:'One payment split into smaller transfers, each just under the reporting threshold.'
@@ -713,7 +713,7 @@ function feed(a){
   $('#rtFeed').innerHTML='<h3 style="margin-top:6px">Attack Activity Feed</h3><div class="tl">'+a.evidence.timeline.map(e=>'<div><span class="ts">'+fmtDate(e.ts)+'</span> — '+esc(e.text)+'</div>').join('')+'</div>';
 }
 /* ================= PAGE: Cases ================= */
-function ntCol(a){if(!a.notice)return '<span class="note">--';return '<span class="bdg '+(a.notice==='Closed'?'b-Cleared':a.notice==='Sent'?'b-New':'b-UnderReview')+'>'+a.notice+'</span>';}
+function vBadge(s){const m={Guilty:'b-High',Suspect:'b-UnderReview',Cleared:'b-Cleared'};return '<span class="bdg '+(m[s]||'b-Info')+'>'+s+'</span>';}
 function caseList(){
   let cs=[];try{cs=JSON.parse(localStorage.getItem('fs_cases')||'[]');}catch(e){}
   return state.alerts.filter(a=>a.status!=='New'||cs.includes(a.id));
@@ -722,8 +722,8 @@ async function vCases(){
   const v=$('#view');await ensureBase();
   const list=caseList();
   v.innerHTML='<div class="phead"><div><h1 class="p">Cases</h1><p class="sub">Alerts under active review, assigned and tracked to resolution.</p></div></div>'
-  +(list.length?'<div class="card"><table class="t"><thead><tr><th>Case</th><th>Pattern</th><th>Priority</th><th>Status</th><th>Owner</th><th>Notice</th><th>Amount</th><th></th></tr></thead><tbody>'
-   +list.map(a=>'<tr class="rowlink" onclick="location.hash=\'#/casedetail/'+a.id+'\'"><td class="mono" style="color:var(--blue);font-weight:700">CAS-'+a.id.slice(3)+'</td><td>'+detPills(a)+'</td><td>'+((a.risk==='Critical'||a.risk==='High')?'<span class="bdg b-High">High Priority</span>':'<span class="bdg b-Info">Normal</span>')+'</td><td>'+bdgStatus(a.status)+'</td><td>'+esc(a.assignee||'—')+'</td><td class="mono">'+ntCol(a)+'</td><td class="mono">'+inr(alertAmount(a))+'</td><td>›</td></tr>').join('')
+  +(list.length?'<div class="card"><table class="t"><thead><tr><th>Case</th><th>Pattern</th><th>Priority</th><th>Status</th><th>Owner</th><th>Amount</th><th></th></tr></thead><tbody>'
+   +list.map(a=>'<tr class="rowlink" onclick="location.hash=\'#/casedetail/'+a.id+'\'"><td class="mono" style="color:var(--blue);font-weight:700">CAS-'+a.id.slice(3)+'</td><td>'+detPills(a)+'</td><td>'+((a.risk==='Critical'||a.risk==='High')?'<span class="bdg b-High">High Priority</span>':'<span class="bdg b-Info">Normal</span>')+'</td><td>'+bdgStatus(a.status)+'</td><td>'+esc(a.assignee||'—')+'</td><td class="mono">'+inr(alertAmount(a))+'</td><td>›</td></tr>').join('')
    +'</tbody></table></div>':'<div class="empty">No open cases. Mark an alert as Investigating or use “Add to Case”.</div>');
 }
 async function vCaseDetail(){
@@ -738,9 +738,9 @@ async function vCaseDetail(){
   +'<div class="card"><h3>Key Findings</h3><ol class="facts">'+(a.hits||[]).map(h=>'<li>'+esc(h.detail)+'</li>').join('')+'</ol></div>'
   +'<div class="card"><h3>Evidence Graph</h3><div id="egraph"></div>'+legendHTML()+'</div>'
   +'<div class="card"><h3>Related Events</h3>'+eventsTable(ev,a)+'</div>'
-  +'<div class="card"><h3>Employee Notice & Response</h3>'
-  +'<p class="hint">The subject is told what was noted, that the matter is under investigation, and is invited to give their side. Sending requires recorded HR/Legal sign-off.</p>'
-  +'<div id="noticeBox"><div class="empty">loading notices...</div></div></div>'
+  +'<div class="card"><h3>Linked People</h3>'
+  +'<p class="hint">Employees connected to this evidence. Record findings per person - anyone marked Guilty lands on the Watchlist.</p>'
+  +'<div id="linkedBox"><div class="empty">loading linked people...</div></div></div>'
   +'</div><div>'
   +'<div class="card"><h3>Case Status</h3><dl class="kv"><dt>Status</dt><dd>'+bdgStatus(a.status)+'</dd><dt>Detected</dt><dd>'+fmtDate((ev.timeline[0]||{ts:''}).ts)+'</dd></dl>'
   +'<label class="fl">Assign To</label><select id="csAsg" style="width:100%"><option value="">unassigned</option>'+state.emps.map(e=>'<option'+(e.id===a.assignee?' selected':'')+'>'+e.id+'</option>').join('')+'</select>'
@@ -751,7 +751,7 @@ async function vCaseDetail(){
   +'<div class="card"><h3>Case Actions</h3><div style="display:flex;flex-direction:column;gap:8px"><button class="btn" onclick="expAlert2()">Generate Report (JSON / Print)</button><button class="btn" onclick="resolveCase2()">Mark as Resolved</button><button class="btn danger" onclick="delCase2()">Remove from Case List</button></div></div>'
   +'</div></div>';
   alertNet=evGraph($('#egraph'),ev,a,{});
-  renderNotices(a);
+  renderLinked(a);
 }
 function cur(){return state.param;}
 async function saveCase2(){const id=cur();
@@ -765,63 +765,53 @@ async function resolveCase2(){await api('/api/alerts/'+cur(),{method:'PATCH',hea
 function delCase2(){if(!confirm('Remove this alert from the case list? (The alert itself is kept.)'))return;
   let cs=[];try{cs=JSON.parse(localStorage.getItem('fs_cases')||'[]');}catch(e){}
   localStorage.setItem('fs_cases',JSON.stringify(cs.filter(x=>x!==cur())));location.hash='#/cases';}
-/* ---- employee notice & response (right-to-reply) ---- */
-function nBadge(s){const m={Sent:'b-New',Acknowledged:'b-UnderReview',Responded:'b-Escalated',Closed:'b-Cleared'};return '<span class="bdg '+(m[s]||'b-Info')+'>'+s+'</span>';}
-async function renderNotices(a){
-  const box=document.getElementById('noticeBox');if(!box)return;
-  const ns=a.notices||[];
-  let h=ns.length?ns.map((n,k)=>noticeCard(n,k)).join(''):'<div class="empty">No notice sent yet.</div>';
-  h+='<div style="margin-top:10px"><button class="btn" id="newNoticeBtn">+ New notice to employee</button><div id="composeBox" style="display:none;margin-top:8px"></div></div>';
-  box.innerHTML=h;
-  box.querySelectorAll('button[data-act]').forEach(b=>{b.onclick=()=>noticeAct(b.dataset.i,b.dataset.act);});
-  document.getElementById('newNoticeBtn').onclick=()=>{
-    const cb=document.getElementById('composeBox');
-    cb.style.display=cb.style.display==='none'?'block':'none';
-    if(cb.style.display==='block')fillCompose();};
+async function renderLinked(a){
+  const box=document.getElementById('linkedBox');if(!box)return;
+  await ensureBase();
+  let V={};try{V=await api('/api/verdicts');}catch(e){}
+  const ids=[];
+  (a.hits||[]).forEach(h=>{if(h.emp&&ids.indexOf(h.emp)<0)ids.push(h.emp);});
+  (a.evidence.nodes||[]).filter(n=>n.kind==='account').forEach(n=>{
+    const ac=(state.entities.accounts||[]).find(x=>x.id===n.id);
+    if(ac&&ac.manager_emp&&ids.indexOf(ac.manager_emp)<0)ids.push(ac.manager_emp);});
+  if(!ids.length){box.innerHTML='<div class="empty">No employees linked to this evidence.</div>';return;}
+  box.innerHTML=ids.map(id=>{
+    const e=(state.entities.employees||[]).find(x=>x.id===id)||{id:id,name:id,dept:'',role:''};
+    const vd=V[id];
+    let h='<div class="stage"><div style="flex:1"><b class="mono">'+id+'</b> '+esc(e.name||'');
+    h+=' <span class="note">'+esc(e.dept||'')+' - '+esc(e.role||'')+'</span><br>';
+    h+=vd?'<span class="bdg '+(vd.status==='Guilty'?'b-High':vd.status==='Suspect'?'b-UnderReview':'b-Cleared')+'">'+vd.status+'</span> <span class="note">'+esc(vd.case_id||'')+'</span>':'<span class="note">no verdict recorded</span>';
+    h+='</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
+    h+=['Suspect','Guilty','Cleared'].map(s=>'<button class="btn" data-e="'+id+'" data-v="'+s+'">'+s+'</button>').join('');
+    h+='</div></div>';
+    return h;}).join('');
+  box.querySelectorAll('button[data-v]').forEach(b=>{b.onclick=()=>setVerdict(b.dataset.e,b.dataset.v,a.id);});
 }
-function noticeCard(n,k){
-  let h='<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0">'
-  +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b class="mono">'+n.id+'</b>'+nBadge(n.status)
-  +'<span>To <b class="mono">'+n.employee+'</b></span><span class="note">sent '+fmtDate(n.sent_at)+' · approved by '+esc(n.approved_by||'?')+'</span></div>'
-  +'<div style="font-weight:700;margin-top:6px">'+esc(n.subject)+'</div>'
-  +'<div class="note" style="white-space:pre-wrap;margin:4px 0">'+esc(n.body)+'</div>';
-  if(n.response)h+='<div class="narr" style="margin:6px 0"><b>Employee response (recorded verbatim):</b><br>'+esc(n.response)+'</div>';
-  h+='<div class="tl" style="max-height:110px">'+n.events.map(e=>'<div><span class="ts">'+fmtDate(e.ts)+'</span> — '+esc(e.event)+' ('+esc(e.by||'?')+')</div>').join('')+'</div>';
-  h+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
-  if(n.status==='Sent')h+='<button class="btn" data-act="ack" data-i="'+k+'">Mark acknowledged</button>';
-  if(n.status==='Acknowledged')h+='<input type="text" id="resp-'+k+'" placeholder="Record employee statement..." style="flex:1;min-width:200px"><button class="btn pri" data-act="resp" data-i="'+k+'">Record response</button>';
-  if(n.status==='Responded')h+='<button class="btn" data-act="close" data-i="'+k+'">Close notice</button>';
-  return h+'</div></div>';
+async function setVerdict(emp,status,caseId){
+  try{await api('/api/verdicts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employee:emp,status:status,case_id:caseId})});}catch(e){return;}
+  toast(emp+' marked '+status+'.');
+  if(state.route==='watchlist')vWatchlist();else{const a=state.details[state.param];if(a)renderLinked(a);}
 }
-async function fillCompose(){
-  const cb=document.getElementById('composeBox');
-  try{const d=await api('/api/alerts/'+cur()+'/notice-draft');
-    cb.innerHTML='<label class="fl">To (subject employee)</label><select id="ntEmp" style="width:100%">'+state.entities.employees.map(e=>'<option'+(e.id===d.employee?' selected':'')+'>'+e.id+'</option>').join('')+'</select>'
-    +'<label class="fl">Subject</label><input type="text" id="ntSub" style="width:100%">'
-    +'<label class="fl">Body (facts auto-filled from evidence)</label><textarea id="ntBody" rows="7" style="width:100%"></textarea>'
-    +'<label class="fl">HR/Legal approval (name, required)</label><input type="text" id="ntAppr" style="width:100%" placeholder="e.g. HR-001">'
-    +'<button class="btn pri" id="sendNoticeBtn" style="margin-top:8px">Send notice</button>';
-    document.getElementById('ntSub').value=d.subject;document.getElementById('ntBody').value=d.body;
-    document.getElementById('sendNoticeBtn').onclick=sendNotice;
-  }catch(e){cb.innerHTML='<div class="empty">Could not load draft.</div>';}
+async function vWatchlist(){
+  const v=document.getElementById('view');
+  v.innerHTML='<div class="empty"><span class="spin"></span> loading watchlist...</div>';
+  await ensureBase();
+  let V={};try{V=await api('/api/verdicts');}catch(e){}
+  const emps=state.entities.employees||[];
+  const rows=Object.keys(V).map(id=>({id:id,v:V[id]}));
+  let h='<div class="phead"><div><h1 class="p">Watchlist</h1><p class="sub">People with recorded findings. Anyone marked Guilty lands here from any case.</p></div></div>';
+  if(!rows.length){h+='<div class="empty">No one flagged yet. Open a case, find the Linked People card, and record findings there.</div>';}
+  else{h+='<div class="card"><table class="t"><thead><tr><th>Employee</th><th>Name</th><th>Department</th><th>Verdict</th><th>Case</th><th>Updated</th><th></th></tr></thead><tbody>'
+    +rows.map(r=>{const e=emps.find(x=>x.id===r.id)||{};
+      return '<tr><td class="mono" style="color:var(--blue);font-weight:700">'+r.id+'</td><td>'+esc(e.name||'-')+'</td><td>'+esc(e.dept||'-')+'</td><td>'+vBadge(r.v.status)+'</td><td class="mono">'+esc(r.v.case_id||'-')+'</td><td class="note">'+esc((r.v.updated||'').slice(0,16))+'</td><td><button class="btn" data-clr="'+r.id+'">Clear</button></td></tr>';}).join('')
+    +'</tbody></table></div>';}
+  v.innerHTML=h;
+  v.querySelectorAll('button[data-clr]').forEach(b=>{b.onclick=()=>clearVerdict(b.dataset.clr);});
 }
-async function sendNotice(){
-  const appr=document.getElementById('ntAppr').value.trim();
-  if(!appr){toast('HR/Legal approval is required before notifying the subject.');return;}
-  try{await api('/api/alerts/'+cur()+'/notices',{method:'POST',headers:{"Content-Type":'application/json'},
-    body:JSON.stringify({employee:document.getElementById('ntEmp').value,subject:document.getElementById('ntSub').value,body:document.getElementById('ntBody').value,approved_by:appr})});
-  }catch(e){return;}
-  state.details[cur()]=await api('/api/alerts/'+cur());toast('Notice sent and logged.');renderNotices(state.details[cur()]);
-}
-async function noticeAct(idx,act){
-  const id=cur(),list=(state.details[id]||{}).notices||[],n=list[+idx];if(!n)return;
-  try{
-    if(act==='ack')await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Acknowledged'})});
-    else if(act==='resp'){const t=document.getElementById('resp-'+idx).value.trim();if(!t){toast('Enter the employee statement first.');return;}
-      await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({response:t})});}
-    else if(act==='close')await api('/api/alerts/'+id+'/notices/'+n.id,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Closed'})});
-  }catch(e){return;}
-  state.details[id]=await api('/api/alerts/'+id);renderNotices(state.details[id]);toast('Notice updated.');
+async function clearVerdict(id){
+  let cur=null;try{const V=await api('/api/verdicts');cur=(V[id]||{}).case_id;}catch(e){}
+  try{await api('/api/verdicts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employee:id,status:'Cleared',case_id:cur})});}catch(e){return;}
+  toast(id+' cleared.');vWatchlist();
 }
 /* ================= PAGE: Graph Explorer ================= */
 let expNet=null,expSel=null,expData=null;
@@ -986,48 +976,7 @@ function initChrome(){
     nd.style.display=nd.style.display==='block'?'none':'block';
   };
 }
-/* ---- demo role switch + employee inbox ---- */
-async function initActor(){
-  await ensureBase().catch(()=>{});
-  const sel=document.getElementById('actorSel');if(!sel||sel.options.length)return;
-  sel.innerHTML='<option value="investigator">Investigator (John Doe)</option>'+(state.emps||[]).map(e=>'<option value="+e.id+">'+e.id+' — employee</option>').join('');
-  sel.value=actor();
-  const up=()=>{const a=actor();document.getElementById('avInit').textContent=a==='investigator'?'JD':a.slice(-3);};up();
-  sel.onchange=()=>{localStorage.setItem('fs_actor',sel.value);up();renderMenu();location.hash=sel.value==='investigator'?'#/home':'#/inbox';};
-}
-async function vInbox(){
-  const v=document.getElementById('view');
-  v.innerHTML='<div class="empty">Loading your notices...</div>';
-  if(actor()==='investigator'){v.innerHTML='<div class="empty">You are viewing as the investigation team. Switch to an employee above to see personal notices.</div>';return;}
-  let mine;try{mine=await api('/api/notices/mine');}catch(e){v.innerHTML='<div class="empty">You are viewing as the investigation team.</div>';return;}
-  const me=actor();
-  let h='<div class="phead"><div><h1 class="p">My Notices</h1><p class="sub">'+me+' — compliance notices addressed to you. Acknowledge receipt and give your side; your words attach to the case file unchanged.</p></div></div>';
-  if(!mine.length)h+='<div class="empty">No notices addressed to you. Nothing is under investigation against you.</div>';
-  h+=mine.map(m=>{
-    const n=m.notice;
-    let c='<div class="card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+nBadge(n.status)+'<b>Case '+m.alert_id+'</b><span class="note">'+(m.detectors||[]).join('+')+'</span></div>'
-    +'<div style="font-weight:700;margin:8px 0 2px">'+esc(n.subject)+'</div>'
-    +'<div class="note" style="white-space:pre-wrap">'+esc(n.body)+'</div>';
-    if(n.response)c+='<div class="narr" style="margin:8px 0">'+esc(n.response)+'</div>';
-    c+='<div style="margin-top:8px;display:flex;gap:8px">';
-    if(n.status==='Sent')c+='<button class="btn pri" data-n="'+n.id+'" data-a="ack">Acknowledge receipt</button>';
-    if(n.status!=='Closed'&&n.status!=='Responded')c+='<input type="text" placeholder="Type your statement here..." style="flex:1"><button class="btn pri" data-n="'+n.id+'" data-a="resp">Send my response</button>';
-    return c+'</div></div>';
-  }).join('');
-  v.innerHTML=h;
-  v.querySelectorAll('button[data-a]').forEach(b=>{b.onclick=()=>inboxAct(b.dataset.n,b.dataset.a,b);});
-}
-async function inboxAct(nid,act,btn){
-  let mine;try{mine=await api('/api/notices/mine');}catch(e){return;}
-  const m=mine.filter(x=>x.notice.id===nid)[0];if(!m)return;
-  try{
-    if(act==='ack')await api('/api/alerts/'+m.alert_id+'/notices/'+nid,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({status:'Acknowledged'})});
-    else{const inp=btn.closest('.card').querySelector('input');const t=inp?inp.value.trim():'';if(!t){toast('Type your statement first.');return;}
-      await api('/api/alerts/'+m.alert_id+'/notices/'+nid,{method:'PATCH',headers:{"Content-Type":'application/json'},body:JSON.stringify({response:t})});}
-  }catch(e){return;}
-  toast('Recorded.');vInbox();
-}
-initChrome();initActor();nav();
+initChrome();nav();
 
 
 

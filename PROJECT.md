@@ -94,7 +94,7 @@ Supporting: confidence badges on every finding, key-risk-factor tags, full event
 
 - **Alert queue → investigation workspace** with filters, triage, and full evidence review.
 - **Cases**: assignment, status (Open → Investigating → Resolved), investigator notes, JSON/print reports, detector-contribution breakdowns.
-- **Employee notice & response (right-to-reply):** cases can formally notify the subject — facts-only notice, gated behind recorded HR/Legal sign-off, with Sent → Acknowledged → Responded → Closed tracking. The employee answers from a scoped personal inbox (role-switched demo identity, server-enforced: own notices only, no case edits, no simulations). Their statement attaches to the case file verbatim.
+- **Watchlist verdicts**: per-person findings (Suspect / Guilty / Cleared) recorded from any case's Linked People card; everyone Guilty collects on a dedicated Watchlist.
 - **Graph Explorer**: zoom out from one case to 1,000+ entities — search, focus mode, subgraph export.
 
 ---
